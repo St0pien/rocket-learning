@@ -25,6 +25,7 @@ namespace NEAT
 
             var gene = new ConnectionGene(conn, getInnovationNumber(conn));
             genome.ConnectionGenes.Add(gene);
+            UnityEngine.Debug.Log($"New connection mutation in genome {genome.Id}: {conn.Input} x {conn.Output}");
         }
     }
 }

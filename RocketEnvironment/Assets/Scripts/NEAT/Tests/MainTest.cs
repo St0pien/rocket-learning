@@ -18,8 +18,6 @@ public class MainTest
         });
 
         File.WriteAllText("file.json", JsonUtility.ToJson(x));
-        Debug.Log(MutationType.TweakWeight == 0);
-        Debug.Log(MutationType.AddConnection != 0);
     }
 
     [Test]
@@ -92,5 +90,34 @@ public class MainTest
         {
             Debug.Log(x.Limit);
         }
+    }
+
+    [Test]
+    public void FullMutationTest()
+    {
+        var x = new Population(new PopulationConfig
+        {
+            PopulationSize = 5,
+            InputSize = 2,
+            OutputSize = 1,
+            GeneralMutationChance = 0.9f,
+            TweakWeightMutationProb = 1,
+            NewConnectionMutationProb = 10,
+            NewNodeMutationProb = 5
+        });
+        Random.InitState(0);
+
+        x.Mutate();
+        File.WriteAllText("../data/uno.json", JsonUtility.ToJson(x));
+        Debug.Log("uno");
+        x.Mutate();
+        File.WriteAllText("../data/dos.json", JsonUtility.ToJson(x));
+        Debug.Log("dos");
+        x.Mutate();
+        File.WriteAllText("../data/tres.json", JsonUtility.ToJson(x));
+        Debug.Log("tres");
+        x.Mutate();
+        File.WriteAllText("../data/quatro.json", JsonUtility.ToJson(x));
+        Debug.Log("quatro");
     }
 }

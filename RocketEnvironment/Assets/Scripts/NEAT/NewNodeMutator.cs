@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace NEAT
 {
     public class NewNodeMutator : IMutator
@@ -22,6 +24,8 @@ namespace NEAT
 
             genome.ConnectionGenes.Add(new ConnectionGene(connIn, getInnovationNumber(connIn)) { Weight = 1 });
             genome.ConnectionGenes.Add(new ConnectionGene(connOut, getInnovationNumber(connOut)) { Weight = pickedConnection.Weight });
+
+            Debug.Log($"New Node mutation: genome {genome.Id} between {pickedConnection.Connection.Input} and {pickedConnection.Connection.Output} node {newNode.Id}");
         }
     }
 }
