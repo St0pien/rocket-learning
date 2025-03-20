@@ -2,6 +2,7 @@ using NUnit.Framework;
 using NEAT;
 using UnityEngine;
 using System.IO;
+using System.Runtime.Remoting.Messaging;
 
 public class MainTest
 {
@@ -102,8 +103,9 @@ public class MainTest
             OutputSize = 1,
             GeneralMutationChance = 0.9f,
             TweakWeightMutationProb = 1,
-            NewConnectionMutationProb = 10,
-            NewNodeMutationProb = 5
+            NewConnectionMutationProb = 5,
+            NewNodeMutationProb = 5,
+            FullyConnected = true,
         });
         Random.InitState(0);
 
@@ -119,5 +121,29 @@ public class MainTest
         x.Mutate();
         File.WriteAllText("../data/quatro.json", JsonUtility.ToJson(x));
         Debug.Log("quatro");
+    }
+
+    [Test]
+    public void CrossoverTesting()
+    {
+        var x = new Population(new PopulationConfig()
+        {
+            PopulationSize = 5,
+            InputSize = 2,
+            OutputSize = 1,
+            GeneralMutationChance = 0.9f,
+            TweakWeightMutationProb = 1,
+            NewConnectionMutationProb = 10,
+            NewNodeMutationProb = 5,
+        });
+
+        x.Mutate();
+        foreach (var g in x.genomes)
+        {
+            g.Fitness = Random.Range(0, 100f);
+        }
+
+        x.genomes.Sort((a, b) => (int)(a.Fitness - b.Fitness));
+        File.WriteAllText("../data/fit.json", JsonUtility.ToJson(x));
     }
 }
