@@ -135,15 +135,60 @@ public class MainTest
             TweakWeightMutationProb = 1,
             NewConnectionMutationProb = 10,
             NewNodeMutationProb = 5,
+            SurvivalThreshold = 0.5f,
+            Elitism = 1,
+            FullyConnected = true
         });
 
+        Random.InitState(0);
         x.Mutate();
         foreach (var g in x.genomes)
         {
-            g.Fitness = Random.Range(0, 100f);
+            g.Fitness = Random.Range(0, 10f);
         }
 
         x.genomes.Sort((a, b) => (int)(a.Fitness - b.Fitness));
-        File.WriteAllText("../data/fit.json", JsonUtility.ToJson(x));
+        File.WriteAllText("../data/fit1.json", JsonUtility.ToJson(x));
+
+
+        x.NextGeneration();
+        File.WriteAllText("../data/cross1.json", JsonUtility.ToJson(x));
+
+        Assert.That(x.genomes.Count, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void CrossoverMultipleTesting()
+    {
+        var x = new Population(new PopulationConfig()
+        {
+            PopulationSize = 30,
+            InputSize = 2,
+            OutputSize = 1,
+            GeneralMutationChance = 0.9f,
+            TweakWeightMutationProb = 3,
+            NewConnectionMutationProb = 1,
+            NewNodeMutationProb = 1,
+            SurvivalThreshold = 0.5f,
+            Elitism = 2,
+            FullyConnected = true
+        });
+
+        Random.InitState(0);
+
+        for (int i = 0; i < 20; i++)
+        {
+            x.Mutate();
+            foreach (var g in x.genomes)
+            {
+                g.Fitness = Random.Range(0, 10f);
+            }
+
+            x.genomes.Sort((a, b) => (int)(a.Fitness - b.Fitness));
+            File.WriteAllText($"../data/fit{i}.json", JsonUtility.ToJson(x));
+
+            x.NextGeneration();
+            File.WriteAllText($"../data/cross{i}.json", JsonUtility.ToJson(x));
+        }
     }
 }

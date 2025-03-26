@@ -15,6 +15,11 @@ namespace NEAT
 
         public void Mutate(Genome genome)
         {
+            if (genome.ConnectionGenes.Count == 0)
+            {
+                return;
+            }
+
             var pickedConnection = genome.GetRandomActiveConnectionGene();
             pickedConnection.Status = ConnectionStatus.Disabled;
             var newNode = new NodeGene(getNodeId(pickedConnection.Connection), NodeType.Hidden);
