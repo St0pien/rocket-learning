@@ -20,5 +20,10 @@ namespace NEAT
             Id = id;
             Type = type;
         }
+
+        public NodeGene Clone()
+        {
+            return new NodeGene(Id, Type);
+        }
     }
 }

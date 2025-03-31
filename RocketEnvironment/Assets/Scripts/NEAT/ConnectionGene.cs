@@ -40,5 +40,10 @@ namespace NEAT
             Connection = connection;
             Innovation = innovation;
         }
+
+        public ConnectionGene Clone()
+        {
+            return new ConnectionGene(Connection, Innovation) { Status = Status, Weight = Weight };
+        }
     }
 }
