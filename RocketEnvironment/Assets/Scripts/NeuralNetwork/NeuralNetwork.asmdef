@@ -1,0 +1,16 @@
+{
+    "name": "NeuralNetwork",
+    "rootNamespace": "",
+    "references": [
+        "GUID:adc3f602860e3eb49b80a5f17de8402a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

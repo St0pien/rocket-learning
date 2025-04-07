@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NEAT;
 using NUnit.Framework;
+using UnityEngine;
 
 public class TestNeuralNetwork
 {
@@ -77,7 +78,7 @@ public class TestNeuralNetwork
     [Test]
     public void ReadJSONTest()
     {
-        var parser = new PopulationJSONParser(".\\Assets\\Scripts\\NeuralNetwork\\test_json.json");
+        var parser = new PopulationJSONParser(".\\Assets\\Scripts\\NeuralNetwork\\NeuralNetworkTests\\test_json.json");
         var network = parser.GetNeuralNetwork(1);
 
         var result = network.CalculateValues(new Dictionary<int, float>() { {1, 1}, {2, 2}, {3, 3} });

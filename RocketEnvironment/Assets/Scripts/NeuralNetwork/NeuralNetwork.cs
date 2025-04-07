@@ -1,20 +1,17 @@
 using System.Collections.Generic;
-using System.Runtime.Serialization.Json;
+using System.Linq;
 using NEAT;
 using UnityEngine;
-using UnityEngine.Windows;
 using File = System.IO.File;
 
 public class NeuralNetwork
 {
-    // maybe those 2 could be switched out for array for better performance?
-    // currently leaving it out as dicts for simplicity
     public Dictionary<int, NodeGene> Nodes;
     public Dictionary<int, List<ConnectionGene>> Dependencies;
-    
+
     public List<ConnectionGene> Connections;
     public List<NodeGene> OutputNodes;
-    
+
 
     public NeuralNetwork(List<NodeGene> nodes, List<ConnectionGene> connections)
     {
@@ -28,7 +25,7 @@ public class NeuralNetwork
                 OutputNodes.Add(node);
             }
         }
-        Connections = connections; // if we don't want connections with Status 0 then apply filter here
+        Connections = connections.Where(c => c.Status != ConnectionStatus.Disabled).ToList();
         // construct dependencies list
         Dependencies = new Dictionary<int, List<ConnectionGene>>();
 
@@ -41,10 +38,10 @@ public class NeuralNetwork
             }
             else
             {
-                Dependencies.Add(endId, new List<ConnectionGene>(){conn});
+                Dependencies.Add(endId, new List<ConnectionGene>() { conn });
             }
         }
-        
+
     }
 
     public Dictionary<int, float> CalculateValues(Dictionary<int, float> inputs)
@@ -76,7 +73,7 @@ public class NeuralNetwork
             memo.Add(id, result);
             return result;
         }
-        
+
         var result = new Dictionary<int, float>();
         foreach (var output in OutputNodes)
         {
