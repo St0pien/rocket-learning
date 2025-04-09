@@ -13,6 +13,11 @@ namespace NEAT
         public List<ConnectionGene> Connections;
         public List<NodeGene> OutputNodes;
 
+        private static float Sigmoid(float x)
+        {
+            return 1 / (1 + Mathf.Exp(-x));
+        }
+
 
         public NeuralNetwork(List<NodeGene> nodes, List<ConnectionGene> connections)
         {
@@ -68,7 +73,7 @@ namespace NEAT
                 foreach (var dep in Dependencies[id])
                 {
                     int startNode = dep.Connection.Input;
-                    result += dep.Weight * Helper(startNode);
+                    result += Sigmoid(dep.Weight * Helper(startNode));
                 }
 
                 memo.Add(id, result);
@@ -92,7 +97,7 @@ namespace NEAT
         public PopulationJSONParser(string filePath)
         {
             string helper = File.ReadAllText(filePath);
-            Genomes = JsonUtility.FromJson<Population>(helper).genomes;
+            Genomes = JsonUtility.FromJson<Population>(helper).GetAllGenomes().ToList();
         }
 
         public NeuralNetwork GetNeuralNetwork(int genomeId)

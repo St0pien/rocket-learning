@@ -19,7 +19,7 @@ public class MainTest
             FullyConnected = true
         });
 
-        File.WriteAllText("file.json", JsonUtility.ToJson(x));
+        File.WriteAllText("../data/file.json", JsonUtility.ToJson(x));
     }
 
     [Test]
@@ -35,9 +35,9 @@ public class MainTest
 
         var mutator = new TweakWeightMutator();
 
-        mutator.Mutate(x.genomes[0]);
+        mutator.Mutate(x.Species[0].Genomes[0]);
 
-        Debug.Log(JsonUtility.ToJson(x.genomes[0]));
+        Debug.Log(JsonUtility.ToJson(x.Species[0].Genomes[0]));
     }
 
     [Test]
@@ -52,7 +52,7 @@ public class MainTest
 
         var id = 0;
         var mutator = new NewConnectionMutator((_) => ++id);
-        mutator.Mutate(x.genomes[0]);
+        mutator.Mutate(x.Species[0].Genomes[0]);
 
         File.WriteAllText("file.json", JsonUtility.ToJson(x));
     }
@@ -72,7 +72,7 @@ public class MainTest
         var con = 12;
         var mutator = new NewNodeMutator((_) => ++nod, (_) => ++con);
 
-        foreach (var g in x.genomes)
+        foreach (var g in x.GetAllGenomes())
         {
             mutator.Mutate(g);
         }
@@ -95,36 +95,6 @@ public class MainTest
     }
 
     [Test]
-    public void FullMutationTest()
-    {
-        var x = new Population(new PopulationConfig
-        {
-            PopulationSize = 5,
-            InputSize = 2,
-            OutputSize = 1,
-            GeneralMutationChance = 0.9f,
-            TweakWeightMutationProb = 1,
-            NewConnectionMutationProb = 5,
-            NewNodeMutationProb = 5,
-            FullyConnected = true,
-        });
-        Random.InitState(0);
-
-        x.Mutate();
-        File.WriteAllText("../data/uno.json", JsonUtility.ToJson(x));
-        Debug.Log("uno");
-        x.Mutate();
-        File.WriteAllText("../data/dos.json", JsonUtility.ToJson(x));
-        Debug.Log("dos");
-        x.Mutate();
-        File.WriteAllText("../data/tres.json", JsonUtility.ToJson(x));
-        Debug.Log("tres");
-        x.Mutate();
-        File.WriteAllText("../data/quatro.json", JsonUtility.ToJson(x));
-        Debug.Log("quatro");
-    }
-
-    [Test]
     public void CrossoverTesting()
     {
         var x = new Population(new PopulationConfig()
@@ -142,20 +112,17 @@ public class MainTest
         });
 
         Random.InitState(0);
-        x.Mutate();
-        foreach (var g in x.genomes)
+        foreach (var g in x.GetAllGenomes())
         {
             g.Fitness = Random.Range(0, 10f);
         }
 
-        x.genomes.Sort((a, b) => (int)(a.Fitness - b.Fitness));
         File.WriteAllText("../data/fit1.json", JsonUtility.ToJson(x));
-
 
         x.NextGeneration();
         File.WriteAllText("../data/cross1.json", JsonUtility.ToJson(x));
 
-        Assert.That(x.genomes.Count, Is.EqualTo(5));
+        Assert.That(x.GetAllGenomes().Count, Is.EqualTo(5));
     }
 
     [Test]
@@ -179,17 +146,13 @@ public class MainTest
 
         for (int i = 0; i < 20; i++)
         {
-            x.Mutate();
-            foreach (var g in x.genomes)
+            foreach (var g in x.GetAllGenomes())
             {
                 g.Fitness = Random.Range(0, 10f);
             }
-
-            x.genomes.Sort((a, b) => (int)(a.Fitness - b.Fitness));
-            File.WriteAllText($"../data/fit{i}.json", JsonUtility.ToJson(x));
+            File.WriteAllText($"../data/cross{i}.json", JsonUtility.ToJson(x));
 
             x.NextGeneration();
-            File.WriteAllText($"../data/cross{i}.json", JsonUtility.ToJson(x));
         }
     }
 
@@ -209,54 +172,61 @@ public class MainTest
             var (input1, input2, output) = v;
             var inDict = new Dictionary<int, float>() {
                 {1, input1},
-                {2, input2}
+                {2, input2},
+                {3, 1}
             };
 
             var prediction = net.CalculateValues(inDict).First().Value;
             var err = output - prediction;
 
-            return err * err;
+            return System.Math.Abs(err);
         }).Sum();
 
-        return -squaredError;
+        return (4 - squaredError) * (4 - squaredError);
     }
 
     [Test]
     public void XORTrainingLoop()
     {
-        Random.InitState(0);
+        // Random.InitState(0);
         var population = new Population(new PopulationConfig()
         {
-            PopulationSize = 40,
-            InputSize = 2,
+            PopulationSize = 150,
+            InputSize = 3,
             OutputSize = 1,
-            GeneralMutationChance = 0.8f,
-            TweakWeightMutationProb = 10f,
-            NewConnectionMutationProb = 2f,
-            NewNodeMutationProb = 2f,
-            SurvivalThreshold = .8f,
-            Elitism = 3,
-            FullyConnected = true
+            FullyConnected = true,
+            GeneralMutationChance = 0.7f,
+            TweakWeightMutationProb = 1f,
+            NewConnectionMutationProb = 1f,
+            NewNodeMutationProb = 1f,
+            SurvivalThreshold = .4f,
+            Elitism = 20,
+            CompatiblityThreshold = 1f,
+            ExcessCompatiblityFactor = 1,
+            DisjointCompatiblityFactor = 1,
+            WeightCompatiblityFactor = 0.4f
         });
-        population.Mutate();
-        foreach (var g in population.genomes)
-        {
-            g.Fitness = XORFitness(g);
-        }
-        population.genomes.Sort((a, b) => b.Fitness.CompareTo(a.Fitness));
-        File.WriteAllText($"../data/xorsmall_{0}.json", JsonUtility.ToJson(population));
 
-        for (int i = 1; i <= 50; i++)
+        for (int i = 1; i <= 100; i++)
         {
-            population.NextGeneration();
-            population.Mutate();
-            foreach (var g in population.genomes)
+            foreach (var g in population.GetAllGenomes())
             {
                 g.Fitness = XORFitness(g);
             }
-            population.genomes.Sort((a, b) => b.Fitness.CompareTo(a.Fitness));
-
-            File.WriteAllText($"../data/xorsmall_{i}.json", JsonUtility.ToJson(population));
+            File.WriteAllText($"../data/xor-medium_{i}.json", JsonUtility.ToJson(population));
+            population.NextGeneration();
         }
+
+        foreach (var g in population.GetAllGenomes())
+        {
+            g.Fitness = XORFitness(g);
+        }
+
+        var best = population.GetAllGenomes().OrderBy(g => g.Fitness).First();
+
+        var net = new NeuralNetwork(best.NodeGenes, best.ConnectionGenes);
+
+        Debug.Log($"0 x 0 = {net.CalculateValues(new Dictionary<int, float>() { {1, 0}, {2,0}, {3, 1}}).First().Value}");
+        Debug.Log($"1 x 0 = {net.CalculateValues(new Dictionary<int, float>() { {1, 1}, {2,0}, {3, 1}}).First().Value}");
     }
 }

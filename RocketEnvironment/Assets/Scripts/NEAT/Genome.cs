@@ -39,5 +39,15 @@ namespace NEAT
             var active = ConnectionGenes.Where(c => c.Status == ConnectionStatus.Enabled).ToList();
             return active[UnityEngine.Random.Range(0, active.Count)];
         }
+
+        public Genome Clone(int id)
+        {
+            return new Genome()
+            {
+                Id = id,
+                NodeGenes = NodeGenes.Select(n => n.Clone()).ToList(),
+                ConnectionGenes = ConnectionGenes.Select(c => c.Clone()).ToList(),
+            };
+        }
     }
 }

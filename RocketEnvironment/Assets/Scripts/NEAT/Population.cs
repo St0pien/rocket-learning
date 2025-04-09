@@ -18,28 +18,32 @@ namespace NEAT
         public float NewNodeMutationProb;
         public float SurvivalThreshold;
         public int Elitism;
+        public float CompatiblityThreshold;
+        public float ExcessCompatiblityFactor;
+        public float DisjointCompatiblityFactor;
+        public float WeightCompatiblityFactor;
     }
 
     [Serializable]
     public class Population
     {
-        public List<Genome> genomes;
-        private int LastInnovation = 0;
-        private int LastNode = 0;
-        private int LastGenomeId = 0;
+        public List<Species> Species;
+        private int lastInnovation = 0;
+        private int lastNode = 0;
+        private int lastGenomeId = 0;
 
         private readonly PopulationConfig config;
         private RandomPool<IMutator> mutationPool;
         private Dictionary<Connection, int> introducedNodes = new Dictionary<Connection, int>(); // in last generation
         private Dictionary<Connection, int> introducedConnections = new Dictionary<Connection, int>(); // in last generation
-        private HashSet<int> Elite = new HashSet<int>();
+        private HashSet<int> elite = new HashSet<int>();
 
         public Population(PopulationConfig config)
         {
             this.config = config;
-            LastNode = config.InputSize + config.OutputSize;
-            LastGenomeId = config.PopulationSize;
-            genomes = Enumerable.Range(1, config.PopulationSize).Select(g =>
+            lastNode = config.InputSize + config.OutputSize;
+            lastGenomeId = config.PopulationSize;
+            var initialGenomes = Enumerable.Range(1, config.PopulationSize).Select(g =>
             {
                 var inputs = Enumerable.Range(1, config.InputSize).Select(i => new NodeGene(i, NodeType.Sensor));
                 var outputs = Enumerable.Range(config.InputSize + 1, config.OutputSize).Select(i => new NodeGene(i, NodeType.Output));
@@ -51,13 +55,15 @@ namespace NEAT
                 };
             }).ToList();
             ConfigureMutations();
+            Mutate(initialGenomes);
+            Species = GroupIntoSpecies(initialGenomes);
         }
 
         private List<ConnectionGene> getFullyConnectedNodes(IEnumerable<NodeGene> inputs, IEnumerable<NodeGene> outputs)
         {
-            LastInnovation = config.InputSize * config.OutputSize;
+            lastInnovation = config.InputSize * config.OutputSize;
             int n = 0;
-            return outputs.SelectMany(o => inputs.Select(i => new ConnectionGene(i.Id, o.Id, (n++ % LastInnovation) + 1))).ToList();
+            return outputs.SelectMany(o => inputs.Select(i => new ConnectionGene(i.Id, o.Id, (n++ % lastInnovation) + 1))).ToList();
         }
 
         private void ConfigureMutations()
@@ -65,19 +71,18 @@ namespace NEAT
             mutationPool = new RandomPool<IMutator>(new (IMutator, float)[] {
                 (new TweakWeightMutator(), config.TweakWeightMutationProb),
                 (new NewConnectionMutator(GetNextInnovation), config.NewConnectionMutationProb),
-                (new NewNodeMutator(GetNextNodeId, GetNextInnovation), config.NewConnectionMutationProb),
+                (new NewNodeMutator(GetNextNodeId, GetNextInnovation), config.NewNodeMutationProb),
              });
         }
 
-        public void Mutate()
+        private void Mutate(List<Genome> genomes)
         {
-            genomes.Sort((a, b) => a.Fitness.CompareTo(b.Fitness));
             introducedNodes.Clear();
             introducedConnections.Clear();
             var genomesToMutate = new List<Genome>();
             foreach (var genome in genomes)
             {
-                if (!Elite.Contains(genome.Id) && UnityEngine.Random.Range(0f, 1f) < config.GeneralMutationChance)
+                if (!elite.Contains(genome.Id) && UnityEngine.Random.Range(0f, 1f) < config.GeneralMutationChance)
                 {
                     genomesToMutate.Add(genome);
                 }
@@ -97,8 +102,8 @@ namespace NEAT
                 return introducedNodes[connection];
             }
 
-            introducedNodes[connection] = ++LastNode;
-            return LastNode;
+            introducedNodes[connection] = ++lastNode;
+            return lastNode;
         }
 
         private int GetNextInnovation(Connection connection)
@@ -109,114 +114,94 @@ namespace NEAT
                 return introducedConnections[connection];
             }
 
-            introducedConnections[connection] = ++LastInnovation;
-            return LastInnovation;
+            introducedConnections[connection] = ++lastInnovation;
+            return lastInnovation;
+        }
+
+        private List<Species> GroupIntoSpecies(List<Genome> genomes)
+        {
+            var species = new List<Species>();
+            foreach (var g in genomes)
+            {
+                PutToCompatibleSpecies(species, g);
+            }
+
+            return species;
+        }
+
+        private Species PutToCompatibleSpecies(List<Species> species, Genome genome)
+        {
+            foreach (var s in species)
+            {
+                if (CompatibilityDistance(s.Representative, genome) < config.CompatiblityThreshold)
+                {
+                    s.Genomes.Add(genome);
+                    return s;
+                }
+            }
+
+            var newSpecies = new Species(genome, () => ++lastGenomeId);
+            species.Add(newSpecies);
+            return newSpecies;
+        }
+
+        private float CompatibilityDistance(Genome g1, Genome g2)
+        {
+            int i = 0;
+            int j = 0;
+            int disjoint = 0;
+            float weightDifferenceSum = 0;
+            while (i < g1.ConnectionGenes.Count && j < g2.ConnectionGenes.Count)
+            {
+                if (g1.ConnectionGenes[i].Innovation < g2.ConnectionGenes[j].Innovation)
+                {
+                    disjoint++;
+                    i++;
+                    continue;
+                }
+                if (g1.ConnectionGenes[i].Innovation > g2.ConnectionGenes[j].Innovation)
+                {
+                    disjoint++;
+                    j++;
+                    continue;
+                }
+                weightDifferenceSum += Math.Abs(g1.ConnectionGenes[i].Weight - g2.ConnectionGenes[j].Weight);
+                i++;
+                j++;
+            }
+            int excess = i == g1.ConnectionGenes.Count ? g2.ConnectionGenes.Count - j : g1.ConnectionGenes.Count - i;
+            // int N = Math.Max(g1.ConnectionGenes.Count, g2.ConnectionGenes.Count);
+            int N = 1;
+
+            return (config.ExcessCompatiblityFactor * excess / N) + (config.DisjointCompatiblityFactor * disjoint / N) + (config.WeightCompatiblityFactor * weightDifferenceSum / N);
+        }
+
+        public IEnumerable<Genome> GetAllGenomes()
+        {
+            return Species.SelectMany(s => s.Genomes).OrderBy(g => g.Fitness);
         }
 
         public void NextGeneration()
         {
-            genomes.Sort((a, b) => a.Fitness.CompareTo(b.Fitness));
-            KillWorst();
-            var nextGeneration = new List<Genome>(genomes.TakeLast(config.Elitism));
-            Elite = new HashSet<int>(nextGeneration.Select(g => g.Id));
-            UnityEngine.Debug.Log($"Passing {config.Elitism} genomes without crossover");
-            nextGeneration.AddRange(Reproduce(genomes, config.PopulationSize - config.Elitism));
+            var nextGeneration = new List<Genome>(GetAllGenomes().TakeLast(config.Elitism));
+            elite = new HashSet<int>(nextGeneration.Select(g => g.Id));
 
-            genomes = nextGeneration;
+            var speciesWithAdjustedFitness = Species.Select(s => (species: s, fitness: s.Genomes.Sum(g => g.Fitness) / s.Genomes.Count));
+            var overallFitness = speciesWithAdjustedFitness.Sum(s => s.Item2);
+
+            foreach (var (species, fitness) in speciesWithAdjustedFitness)
+            {
+                int quantity = Math.Max(0, (int)(fitness / overallFitness * (config.PopulationSize - config.Elitism)));
+                nextGeneration.AddRange(species.ProduceOffsprings(quantity, config.SurvivalThreshold));
+            }
+            var bestSpecies = speciesWithAdjustedFitness.OrderByDescending(p => p.fitness).First().species;
+            nextGeneration.AddRange(bestSpecies.ProduceOffsprings(config.PopulationSize - nextGeneration.Count, config.SurvivalThreshold));
+
+            Species = GroupIntoSpecies(nextGeneration);
             introducedNodes.Clear();
             introducedConnections.Clear();
-        }
 
-        private void KillWorst()
-        {
-            int cutOff = (int)(genomes.Count * (1 - config.SurvivalThreshold));
-            UnityEngine.Debug.Log($"Killing {cutOff} genomes");
-            genomes.RemoveRange(0, cutOff);
-        }
-
-        // Assume parents sorted by Fitness
-        private List<Genome> Reproduce(List<Genome> parents, int size)
-        {
-            var pool = new RandomPool<Genome>(parents.Select(p => (p, p.Fitness)));
-
-            return Enumerable.Range(0, size).Select((_) =>
-            {
-                var p1 = pool.Get();
-                var p2 = pool.Get();
-                while (p1 == p2) p2 = pool.Get();
-                var offspring = GetOffspring(p1, p2);
-                UnityEngine.Debug.Log($"Crossing {p1.Id} with {p2.Id} to produce {offspring.Id}");
-                return offspring;
-            }).ToList();
-        }
-
-        private Genome GetOffspring(Genome g1, Genome g2)
-        {
-            var better = g1.Fitness >= g2.Fitness ? g1 : g2;
-            var worse = g1.Fitness < g2.Fitness ? g1 : g2;
-
-            var offspring = new Genome()
-            {
-                Id = ++LastGenomeId,
-                NodeGenes = new List<NodeGene>(),
-                ConnectionGenes = new List<ConnectionGene>()
-            };
-
-            var nodesAdded = new HashSet<int>();
-            int b = 0;
-            int w = 0;
-            Action<ConnectionGene> passConnection = (gene) =>
-            {
-                offspring.ConnectionGenes.Add(gene.Clone());
-
-                if (!nodesAdded.Contains(gene.Connection.Input))
-                {
-                    offspring.NodeGenes.Add(better.GetNode(gene.Connection.Input).Clone());
-                    nodesAdded.Add(gene.Connection.Input);
-                }
-                if (!nodesAdded.Contains(gene.Connection.Output))
-                {
-                    offspring.NodeGenes.Add(better.GetNode(gene.Connection.Output).Clone());
-                    nodesAdded.Add(gene.Connection.Output);
-                }
-            };
-
-            while (b < better.ConnectionGenes.Count && w < worse.ConnectionGenes.Count)
-            {
-                if (better.ConnectionGenes[b].Innovation < worse.ConnectionGenes[w].Innovation)
-                {
-                    // Pass unmatched genes of better parent
-                    var gene = better.ConnectionGenes[b++];
-                    passConnection(gene);
-                }
-                else if (better.ConnectionGenes[b].Innovation > worse.ConnectionGenes[w].Innovation)
-                {
-                    // Skip unmatched genes of worse parent
-                    w++;
-                }
-                else
-                {
-                    // Pass random matching genes
-                    var pool = new RandomPool<ConnectionGene>(new (ConnectionGene, float)[]{
-                        (better.ConnectionGenes[b], better.Fitness),
-                        (worse.ConnectionGenes[w], worse.Fitness)
-                    });
-                    var gene = pool.Get();
-                    passConnection(gene);
-                    w++;
-                    b++;
-                }
-            }
-
-            // Finish passing unmatched genes of better parent
-            while (b < better.ConnectionGenes.Count)
-            {
-                passConnection(better.ConnectionGenes[b++]);
-            }
-
-            offspring.NodeGenes.Sort((a, b) => a.Id - b.Id);
-
-            return offspring;
+            Mutate(GetAllGenomes().ToList());
         }
     }
 }

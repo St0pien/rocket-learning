@@ -14,6 +14,7 @@ namespace Probability
         }
 
         private List<Entry> entries;
+        public int Size { get { return entries.Count; } }
 
         public RandomPool(IEnumerable<(T value, float weight)> values)
         {
@@ -35,8 +36,17 @@ namespace Probability
         public T Get()
         {
             var rnd = UnityEngine.Random.Range(0f, 1f);
-            var index = 0;
-            while (rnd > entries[index].Limit) index++;
+            var index = entries.Count - 1;
+            int i = 0;
+            while (index > 0 && rnd > entries[index].Limit)
+            {
+                if (i++ > 1000)
+                {
+                    throw new Exception("buruuh");
+                }
+                index--;
+            }
+            ;
             return entries[index].value;
         }
     }
