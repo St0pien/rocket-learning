@@ -58,57 +58,14 @@ public class Rocket : MonoBehaviour
         {
             engine.AttachFireFX(Instantiate(firePrefab, engine.transform));
         }
-        // StartCoroutine(RandomInput());
     }
 
     // Update is called once per frame
     void Update()
     {
-        // TmpUserInput();
         foreach (var engine in engines)
         {
             rb.AddForceAtPosition(engine.thrustVector * engineThrustMultiplier, engine.transform.position);
-        }
-    }
-
-    void TmpUserInput()
-    {
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            Debug.Log("Engine run");
-            foreach (var engine in engines)
-            {
-                engine.SetThrust(1f);
-            }
-        }
-
-        if (Input.GetKeyUp(KeyCode.W))
-        {
-            Debug.Log("Engine stop");
-            foreach (var engine in engines)
-            {
-                engine.SetThrust(0f);
-            }
-        }
-    }
-
-    IEnumerator<YieldInstruction> RandomInput()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(1f);
-
-            foreach (var engine in engines)
-            {
-                engine.SetThrust(UnityEngine.Random.Range(0f, 1f));
-            }
-
-            yield return new WaitForSeconds(1f);
-
-            foreach (var engine in engines)
-            {
-                engine.SetThrust(UnityEngine.Random.Range(0f, 1f));
-            }
         }
     }
 }

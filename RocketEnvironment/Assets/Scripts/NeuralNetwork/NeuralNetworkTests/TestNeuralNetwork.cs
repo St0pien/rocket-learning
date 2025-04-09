@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NEAT;
 using NUnit.Framework;
-using UnityEngine;
 
 public class TestNeuralNetwork
 {

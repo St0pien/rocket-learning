@@ -2,7 +2,8 @@ using NUnit.Framework;
 using NEAT;
 using UnityEngine;
 using System.IO;
-using System.Runtime.Remoting.Messaging;
+using System.Linq;
+using System.Collections.Generic;
 
 public class MainTest
 {
@@ -189,6 +190,73 @@ public class MainTest
 
             x.NextGeneration();
             File.WriteAllText($"../data/cross{i}.json", JsonUtility.ToJson(x));
+        }
+    }
+
+    private List<(float, float, float)> xorMap = new List<(float, float, float)>(){
+        (0f,0f, 0f),
+        (0f,1f,1f),
+        (1f, 0f, 1f),
+        (1f,1f,0f)
+    };
+
+    float XORFitness(Genome genome)
+    {
+        var net = new NeuralNetwork(genome.NodeGenes, genome.ConnectionGenes);
+
+        var squaredError = xorMap.Select(v =>
+        {
+            var (input1, input2, output) = v;
+            var inDict = new Dictionary<int, float>() {
+                {1, input1},
+                {2, input2}
+            };
+
+            var prediction = net.CalculateValues(inDict).First().Value;
+            var err = output - prediction;
+
+            return err * err;
+        }).Sum();
+
+        return -squaredError;
+    }
+
+    [Test]
+    public void XORTrainingLoop()
+    {
+        Random.InitState(0);
+        var population = new Population(new PopulationConfig()
+        {
+            PopulationSize = 40,
+            InputSize = 2,
+            OutputSize = 1,
+            GeneralMutationChance = 0.8f,
+            TweakWeightMutationProb = 10f,
+            NewConnectionMutationProb = 2f,
+            NewNodeMutationProb = 2f,
+            SurvivalThreshold = .8f,
+            Elitism = 3,
+            FullyConnected = true
+        });
+        population.Mutate();
+        foreach (var g in population.genomes)
+        {
+            g.Fitness = XORFitness(g);
+        }
+        population.genomes.Sort((a, b) => b.Fitness.CompareTo(a.Fitness));
+        File.WriteAllText($"../data/xor_{0}.json", JsonUtility.ToJson(population));
+
+        for (int i = 1; i <= 1000; i++)
+        {
+            population.NextGeneration();
+            population.Mutate();
+            foreach (var g in population.genomes)
+            {
+                g.Fitness = XORFitness(g);
+            }
+            population.genomes.Sort((a, b) => b.Fitness.CompareTo(a.Fitness));
+
+            File.WriteAllText($"../data/xor_{i}.json", JsonUtility.ToJson(population));
         }
     }
 }

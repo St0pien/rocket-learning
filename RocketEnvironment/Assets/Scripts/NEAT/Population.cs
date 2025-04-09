@@ -32,6 +32,7 @@ namespace NEAT
         private RandomPool<IMutator> mutationPool;
         private Dictionary<Connection, int> introducedNodes = new Dictionary<Connection, int>(); // in last generation
         private Dictionary<Connection, int> introducedConnections = new Dictionary<Connection, int>(); // in last generation
+        private HashSet<int> Elite = new HashSet<int>();
 
         public Population(PopulationConfig config)
         {
@@ -70,12 +71,13 @@ namespace NEAT
 
         public void Mutate()
         {
+            genomes.Sort((a, b) => a.Fitness.CompareTo(b.Fitness));
             introducedNodes.Clear();
             introducedConnections.Clear();
             var genomesToMutate = new List<Genome>();
             foreach (var genome in genomes)
             {
-                if (UnityEngine.Random.Range(0f, 1f) < config.GeneralMutationChance)
+                if (!Elite.Contains(genome.Id) && UnityEngine.Random.Range(0f, 1f) < config.GeneralMutationChance)
                 {
                     genomesToMutate.Add(genome);
                 }
@@ -113,9 +115,10 @@ namespace NEAT
 
         public void NextGeneration()
         {
-            genomes.Sort((a, b) => (int)(a.Fitness - b.Fitness));
+            genomes.Sort((a, b) => a.Fitness.CompareTo(b.Fitness));
             KillWorst();
-            var nextGeneration = new List<Genome>(genomes.Take(config.Elitism));
+            var nextGeneration = new List<Genome>(genomes.TakeLast(config.Elitism));
+            Elite = new HashSet<int>(nextGeneration.Select(g => g.Id));
             UnityEngine.Debug.Log($"Passing {config.Elitism} genomes without crossover");
             nextGeneration.AddRange(Reproduce(genomes, config.PopulationSize - config.Elitism));
 

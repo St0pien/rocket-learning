@@ -1,3 +1,4 @@
+using Math = System.Math;
 using UnityEngine;
 
 namespace NEAT
@@ -8,7 +9,8 @@ namespace NEAT
         {
             Debug.Log($"Weight mutator: genome {genome.Id}");
             var rand = Random.Range(0, genome.ConnectionGenes.Count);
-            genome.ConnectionGenes[rand].Weight = Random.Range(0f, 1f);
+            genome.ConnectionGenes[rand].Weight += Random.Range(0f, 1f);
+            genome.ConnectionGenes[rand].Weight = Math.Clamp(genome.ConnectionGenes[rand].Weight, 0, 1);
         }
     }
 }
