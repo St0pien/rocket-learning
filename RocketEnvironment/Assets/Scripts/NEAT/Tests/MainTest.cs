@@ -244,9 +244,9 @@ public class MainTest
             g.Fitness = XORFitness(g);
         }
         population.genomes.Sort((a, b) => b.Fitness.CompareTo(a.Fitness));
-        File.WriteAllText($"../data/xor_{0}.json", JsonUtility.ToJson(population));
+        File.WriteAllText($"../data/xorsmall_{0}.json", JsonUtility.ToJson(population));
 
-        for (int i = 1; i <= 1000; i++)
+        for (int i = 1; i <= 50; i++)
         {
             population.NextGeneration();
             population.Mutate();
@@ -256,7 +256,7 @@ public class MainTest
             }
             population.genomes.Sort((a, b) => b.Fitness.CompareTo(a.Fitness));
 
-            File.WriteAllText($"../data/xor_{i}.json", JsonUtility.ToJson(population));
+            File.WriteAllText($"../data/xorsmall_{i}.json", JsonUtility.ToJson(population));
         }
     }
 }
