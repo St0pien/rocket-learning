@@ -8,10 +8,10 @@ namespace NEAT2
     public class PopulationConfig
     {
         public int PopulationSize = 150;
-        public SpeciesConfig speciesConfig;
-        public ReproductionConfig reproductionConfig;
-        public StagnationConfig stagnationConfig;
-        public GenomeConfig genomeConfig;
+        public SpeciesConfig speciesConfig = new SpeciesConfig();
+        public ReproductionConfig reproductionConfig = new ReproductionConfig();
+        public StagnationConfig stagnationConfig = new StagnationConfig();
+        public GenomeConfig genomeConfig = new GenomeConfig();
     }
 
     public class Population
@@ -54,11 +54,17 @@ namespace NEAT2
             return species.Species.Values.SelectMany(s => s.Members.Values);
         }
 
+        public Genome Best()
+        {
+            return GetAllGenomes().OrderByDescending(g => g.Fitness).First();
+        }
+
         public GenerationSnapshot Snapshot()
         {
             return new GenerationSnapshot()
             {
                 config = config,
+                Best = Best(),
                 Generation = Generation,
                 Species = species.Species
             };

@@ -54,7 +54,7 @@ public class MainTest
         var mutator = new NewConnectionMutator((_) => ++id);
         mutator.Mutate(x.Species[0].Genomes[0]);
 
-        File.WriteAllText("file.json", JsonUtility.ToJson(x));
+        File.WriteAllText("../data/file.json", JsonUtility.ToJson(x));
     }
 
     [Test]
@@ -77,7 +77,7 @@ public class MainTest
             mutator.Mutate(g);
         }
 
-        File.WriteAllText("file.json", JsonUtility.ToJson(x));
+        File.WriteAllText("../data/file.json", JsonUtility.ToJson(x));
     }
 
     [Test]
@@ -226,7 +226,7 @@ public class MainTest
 
         var net = new NeuralNetwork(best.NodeGenes, best.ConnectionGenes);
 
-        Debug.Log($"0 x 0 = {net.CalculateValues(new Dictionary<int, float>() { {1, 0}, {2,0}, {3, 1}}).First().Value}");
-        Debug.Log($"1 x 0 = {net.CalculateValues(new Dictionary<int, float>() { {1, 1}, {2,0}, {3, 1}}).First().Value}");
+        Debug.Log($"0 x 0 = {net.CalculateValues(new Dictionary<int, float>() { { 1, 0 }, { 2, 0 }, { 3, 1 } }).First().Value}");
+        Debug.Log($"1 x 0 = {net.CalculateValues(new Dictionary<int, float>() { { 1, 1 }, { 2, 0 }, { 3, 1 } }).First().Value}");
     }
 }

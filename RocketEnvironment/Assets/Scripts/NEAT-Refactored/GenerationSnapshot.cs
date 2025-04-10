@@ -7,6 +7,7 @@ namespace NEAT2
     public class GenerationSnapshot
     {
         public int Generation;
+        public Genome Best;
         public Dictionary<int, Species> Species;
         public PopulationConfig config;
     }

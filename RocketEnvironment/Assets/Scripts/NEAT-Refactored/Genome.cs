@@ -15,7 +15,7 @@ namespace NEAT2
         public bool InitialRandomWeights = true;
 
         public float NodeAddProb = 0.2f;
-        public float NodeDeleteProb = 0.1f;
+        public float NodeDeleteProb = 0f;
         public float ConnAddProb = 0.3f;
         public float ConnDeleteProb = 0.1f;
         public float TweakWeightProb = 0.8f;
