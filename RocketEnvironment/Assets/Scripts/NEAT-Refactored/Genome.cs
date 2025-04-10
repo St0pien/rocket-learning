@@ -23,7 +23,6 @@ namespace NEAT2
         public float ReplaceWeightProb = 0.5f;
     }
 
-    [Serializable]
     public class GenomeModule
     {
         public GenomeConfig config;

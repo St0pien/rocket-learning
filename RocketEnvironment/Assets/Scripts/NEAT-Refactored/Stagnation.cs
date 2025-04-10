@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace NEAT2
 {
+    [Serializable]
     public class StagnationConfig
     {
         public int MaxStagnation = 15;

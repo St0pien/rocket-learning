@@ -6,7 +6,9 @@
         "UnityEditor.TestRunner",
         "NEAT2"
     ],
-    "includePlatforms": ["Editor"],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,

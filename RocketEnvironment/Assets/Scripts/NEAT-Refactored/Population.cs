@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -53,6 +52,16 @@ namespace NEAT2
         public IEnumerable<Genome> GetAllGenomes()
         {
             return species.Species.Values.SelectMany(s => s.Members.Values);
+        }
+
+        public GenerationSnapshot Snapshot()
+        {
+            return new GenerationSnapshot()
+            {
+                config = config,
+                Generation = Generation,
+                Species = species.Species
+            };
         }
     }
 }

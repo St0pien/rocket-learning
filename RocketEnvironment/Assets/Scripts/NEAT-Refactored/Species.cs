@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace NEAT2
 {
+    [Serializable]
     public class Species
     {
         public int Id;
@@ -28,6 +29,7 @@ namespace NEAT2
         }
     }
 
+    [Serializable]
     public class SpeciesConfig
     {
         public float CompatibilityThreshold = 3f;

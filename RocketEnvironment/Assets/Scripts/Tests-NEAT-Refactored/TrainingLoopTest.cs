@@ -1,5 +1,7 @@
+using System.IO;
 using NEAT2;
 using NUnit.Framework;
+using UnityEngine;
 
 public class TrainingLoopTest
 {
@@ -29,14 +31,19 @@ public class TrainingLoopTest
         });
 
         population.Init();
-
-        for (int i = 0; i < 500; i++)
+        foreach (var g in population.GetAllGenomes())
         {
+            g.Fitness += UnityEngine.Random.Range(0, 100);
+        }
+
+        for (int i = 1; i <= 500; i++)
+        {
+            population.NextGeneration();
+
             foreach (var g in population.GetAllGenomes())
             {
                 g.Fitness += UnityEngine.Random.Range(0, 100);
             }
-            population.NextGeneration();
         }
     }
 }

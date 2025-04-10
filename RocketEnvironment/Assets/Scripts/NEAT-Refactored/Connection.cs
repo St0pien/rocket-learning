@@ -1,8 +1,5 @@
-using System;
-
 namespace NEAT2
 {
-    [Serializable]
     public struct Connection
     {
         public int Input;
