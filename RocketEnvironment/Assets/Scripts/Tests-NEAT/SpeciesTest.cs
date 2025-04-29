@@ -1,4 +1,4 @@
-using NEAT2;
+using NEAT;
 using NUnit.Framework;
 
 public class SpeciesTest

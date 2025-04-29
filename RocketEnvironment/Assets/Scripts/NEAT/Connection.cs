@@ -1,4 +1,4 @@
-namespace NEAT2
+namespace NEAT
 {
     public struct Connection
     {

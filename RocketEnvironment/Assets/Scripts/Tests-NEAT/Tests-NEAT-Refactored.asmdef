@@ -1,11 +1,10 @@
 {
-    "name": "Tests-NEAT-Refactored",
+    "name": "Tests-NEAT",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "NEAT2",
-        ""
+        "NEAT"
     ],
     "includePlatforms": [
         "Editor"

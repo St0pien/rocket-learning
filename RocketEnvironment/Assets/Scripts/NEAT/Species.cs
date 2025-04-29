@@ -1,128 +1,119 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Probability;
 
 namespace NEAT
 {
     [Serializable]
     public class Species
     {
-        public delegate int GenomeIdGetter();
+        public int Id;
+        public int LastImproved;
+        public Dictionary<int, Genome> Members;
+        public Genome Representative;
+        public float Fitness = float.MinValue;
+        public float AdjustedFitness = float.MinValue;
+        public List<float> FitnessHistory = new List<float>();
 
-        public List<Genome> Genomes;
-        public Genome Representative { private set; get; }
-        public int Id { get { return Representative.Id; } }
-
-        private GenomeIdGetter getGenomeId;
-
-        public Species(Genome repr, GenomeIdGetter idGetter)
+        public Species(int id, int generation)
         {
-            Representative = repr;
-            Genomes = new List<Genome>() { repr };
-            getGenomeId = idGetter;
+            Id = id;
+            LastImproved = generation;
+            Members = new Dictionary<int, Genome>();
         }
 
-        public List<Genome> ProduceOffsprings(int quantity, float survivalThreshold)
+        public void SetRepresentative(Genome g)
         {
-            if (quantity == 0)
+            Representative = g;
+            Members.Add(g.Id, g);
+        }
+    }
+
+    [Serializable]
+    public class SpeciesConfig
+    {
+        public float CompatibilityThreshold = 3f;
+        public float CompatibilityDisjointCoefficient = 1f;
+        public float CompatibilityWeightCoefficient = 0.5f;
+    }
+
+    public class SpeciesModule
+    {
+        private SpeciesConfig config;
+        private int LastSpeciesId = 0;
+        public Dictionary<int, Species> Species = new Dictionary<int, Species>();
+
+        public SpeciesModule(SpeciesConfig cfg)
+        {
+            config = cfg;
+        }
+
+        public void Speciate(Dictionary<int, Genome> population, int generation)
+        {
+            // Find new representatives
+            foreach (var (id, species) in Species)
             {
-                return new List<Genome>();
+                var candidates = population.Values.Select(g => (dist: GetDistance(species.Representative, g), g));
+                var newRepr = candidates.OrderBy(x => x.dist).First().g;
+                species.Representative = newRepr;
+                species.Members = new Dictionary<int, Genome>() { { newRepr.Id, newRepr } };
+                population.Remove(newRepr.Id);
             }
 
-            var ancestorsPool = pickAncestors(survivalThreshold);
-            if (ancestorsPool.Size == 1)
+            // Distribute the rest to species
+            if (Species.Count == 0)
             {
-                return Enumerable.Range(0, quantity).Select(_ => ancestorsPool.Get().Clone(getGenomeId())).ToList();
+                var initialRepr = population.First().Value;
+                population.Remove(initialRepr.Id);
+                var id = ++LastSpeciesId;
+                var initialSpecies = new Species(id, generation);
+                initialSpecies.SetRepresentative(initialRepr);
+                Species.Add(id, initialSpecies);
             }
 
-            return Enumerable.Range(0, quantity).Select(_ =>
+            foreach (var (key, genome) in population)
             {
-                var p1 = ancestorsPool.Get();
-                var p2 = ancestorsPool.Get();
-                while (p1 == p2)
+                var candidates = Species.Values.Select(s => (dist: GetDistance(s.Representative, genome), s));
+                var bestFit = candidates.OrderBy(x => x.dist).First();
+                if (bestFit.dist < config.CompatibilityThreshold)
                 {
-                    p2 = ancestorsPool.Get();
-                }
-                return Cross(p1, p2);
-            }).ToList();
-        }
-
-        private RandomPool<Genome> pickAncestors(float survivalThreshold)
-        {
-            Genomes.Sort((a, b) => a.Fitness.CompareTo(b.Fitness));
-            var killCount = (int)(Genomes.Count * (1 - survivalThreshold));
-
-            return new RandomPool<Genome>(Genomes.Skip(killCount).Select(g => (g, g.Fitness)));
-        }
-
-        private Genome Cross(Genome g1, Genome g2)
-        {
-            var better = g1.Fitness >= g2.Fitness ? g1 : g2;
-            var worse = g1.Fitness < g2.Fitness ? g1 : g2;
-
-            var offspring = new Genome()
-            {
-                Id = getGenomeId(),
-                NodeGenes = new List<NodeGene>(),
-                ConnectionGenes = new List<ConnectionGene>()
-            };
-
-            var nodesAdded = new HashSet<int>();
-            int b = 0;
-            int w = 0;
-            Action<ConnectionGene> passConnection = (gene) =>
-            {
-                offspring.ConnectionGenes.Add(gene.Clone());
-
-                if (!nodesAdded.Contains(gene.Connection.Input))
-                {
-                    offspring.NodeGenes.Add(better.GetNode(gene.Connection.Input).Clone());
-                    nodesAdded.Add(gene.Connection.Input);
-                }
-                if (!nodesAdded.Contains(gene.Connection.Output))
-                {
-                    offspring.NodeGenes.Add(better.GetNode(gene.Connection.Output).Clone());
-                    nodesAdded.Add(gene.Connection.Output);
-                }
-            };
-
-            while (b < better.ConnectionGenes.Count && w < worse.ConnectionGenes.Count)
-            {
-                if (better.ConnectionGenes[b].Innovation < worse.ConnectionGenes[w].Innovation)
-                {
-                    // Pass unmatched genes of better parent
-                    var gene = better.ConnectionGenes[b++];
-                    passConnection(gene);
-                }
-                else if (better.ConnectionGenes[b].Innovation > worse.ConnectionGenes[w].Innovation)
-                {
-                    // Skip unmatched genes of worse parent
-                    w++;
+                    bestFit.s.Members.Add(genome.Id, genome);
                 }
                 else
                 {
-                    // Pass random matching genes
-                    var pool = new RandomPool<ConnectionGene>(new (ConnectionGene, float)[]{
-                        (better.ConnectionGenes[b], better.Fitness),
-                        (worse.ConnectionGenes[w], worse.Fitness)
-                    });
-                    var gene = pool.Get();
-                    passConnection(gene);
-                    w++;
-                    b++;
+                    var id = ++LastSpeciesId;
+                    var species = new Species(id, generation);
+                    species.SetRepresentative(genome);
+                    Species.Add(id, species);
+                }
+            }
+        }
+
+        public float GetDistance(Genome g1, Genome g2)
+        {
+            float weightDifference = 0f;
+            int disjoint_nodes = g2.ConnectionGenes.Keys.Count(k => !g1.ConnectionGenes.ContainsKey(k));
+
+            foreach (var (key, cg) in g1.ConnectionGenes)
+            {
+                if (g2.ConnectionGenes.ContainsKey(key))
+                {
+                    var cg2 = g2.ConnectionGenes[key];
+                    weightDifference += Math.Abs(cg.Weight - cg2.Weight);
+                    if (cg.Status != cg2.Status)
+                    {
+                        weightDifference++;
+                    }
+                }
+                else
+                {
+                    disjoint_nodes++;
                 }
             }
 
-            // Finish passing unmatched genes of better parent
-            while (b < better.ConnectionGenes.Count)
-            {
-                passConnection(better.ConnectionGenes[b++]);
-            }
+            int N = Math.Max(g1.ConnectionGenes.Count, g2.ConnectionGenes.Count);
 
-            offspring.NodeGenes.Sort((a, b) => a.Id - b.Id);
-
-            return offspring;
+            return (config.CompatibilityDisjointCoefficient * disjoint_nodes + config.CompatibilityWeightCoefficient * weightDifference) / N;
         }
     }
 }

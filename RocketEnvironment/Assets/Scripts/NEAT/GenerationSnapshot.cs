@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NEAT2
+namespace NEAT
 {
     [Serializable]
     public class GenerationSnapshot

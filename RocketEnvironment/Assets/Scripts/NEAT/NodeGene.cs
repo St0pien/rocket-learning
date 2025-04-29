@@ -2,7 +2,8 @@ using System;
 
 namespace NEAT
 {
-    public enum NodeType
+    [Serializable]
+    public enum NodeGeneType
     {
         Sensor,
         Hidden,
@@ -13,9 +14,9 @@ namespace NEAT
     public class NodeGene
     {
         public int Id;
-        public NodeType Type;
+        public NodeGeneType Type;
 
-        public NodeGene(int id, NodeType type)
+        public NodeGene(int id, NodeGeneType type)
         {
             Id = id;
             Type = type;

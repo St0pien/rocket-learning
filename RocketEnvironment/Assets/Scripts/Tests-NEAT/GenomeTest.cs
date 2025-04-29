@@ -1,5 +1,5 @@
 using System.Linq;
-using NEAT2;
+using NEAT;
 using NUnit.Framework;
 
 public class GenomeTest

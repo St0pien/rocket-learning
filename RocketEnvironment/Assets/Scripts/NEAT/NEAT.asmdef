@@ -1,9 +1,7 @@
 {
     "name": "NEAT",
-    "rootNamespace": "NEAT",
-    "references": [
-        "GUID:c652e89b823ce6d4bb6e65625e535c79"
-    ],
+    "rootNamespace": "",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

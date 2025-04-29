@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
-using NEAT2;
+using NEAT;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using UnityEngine;
 
 public class TrainingLoopTest
 {
@@ -143,7 +141,9 @@ public class TrainingLoopTest
             }
             File.WriteAllText($"../data/xor_{i}.json", JsonConvert.SerializeObject(population.Snapshot()));
 
-            var best = population.Best();
+            population.StoreBest();
+            var best = population.Best;
+            UnityEngine.Debug.Log($"Best fitness: {best.Fitness}");
             var bestNet = new NeuralNetwork(best.NodeGenes, best.ConnectionGenes);
             UnityEngine.Debug.Log($"Generation {i}");
             UnityEngine.Debug.Log($"0 x 0  = {bestNet.Activate(new Dictionary<int, float>() { { 1, 0f }, { 2, 0f }, { 3, 1f } }).First().Value}");
@@ -155,7 +155,7 @@ public class TrainingLoopTest
 
     public float f(float x, float y)
     {
-        return x*x + y*y + -10*x*y;
+        return x * x + y * y + -10 * x * y;
     }
     public float RationalFitness(Genome genome)
     {
