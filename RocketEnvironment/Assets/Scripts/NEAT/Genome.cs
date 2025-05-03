@@ -220,6 +220,7 @@ namespace NEAT
 
         private void MutateConnDelete()
         {
+            if (ConnectionGenes.Count == 0) return;
             var cgs = ConnectionGenes.Values.ToList();
             var cg = cgs[UnityEngine.Random.Range(0, cgs.Count)];
             cg.Status = ConnectionStatus.Disabled;

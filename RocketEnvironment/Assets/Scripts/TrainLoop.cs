@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using NEAT;
 using System.Linq;
+using System.IO;
+using Newtonsoft.Json;
 
 public class TrainLoop : MonoBehaviour
 {
@@ -16,6 +18,7 @@ public class TrainLoop : MonoBehaviour
         public OOBMetric Bounds;
         public Genome Genome { private set; get; }
         public NeuralNetwork network;
+        public bool InProgress = false;
 
         public void AssignGenome(Genome genome)
         {
@@ -28,10 +31,12 @@ public class TrainLoop : MonoBehaviour
         {
             if (Genome == null) return;
 
-            Debug.Log($"Removing genome {Genome.Id} to {Environment.name}. Fitness: {Genome.Fitness}");
+            Debug.Log($"Removing genome {Genome.Id} from {Environment.name}. Fitness: {Genome.Fitness}");
             Genome = null;
         }
     }
+
+    public string Label = "env";
 
     [Header("Prefabs")]
     public GameObject rocketPrefab;
@@ -51,6 +56,14 @@ public class TrainLoop : MonoBehaviour
     private Population population;
     private Queue<Genome> genomesToEvaluate;
     private Queue<TrainingEnvironment> availableEnvironments = new Queue<TrainingEnvironment>();
+
+    [Header("Fitness")]
+    public float InitialFitness = 100f;
+    public float OOBPunishment = 100f;
+    public float DestructiveHitPunishment = 100f;
+    public float LegHitReward = 300f;
+    public float LegHitVelocityPunishmentMultiplier = 5f;
+    public float HeightRewardPerSecond = 1f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -80,12 +93,12 @@ public class TrainLoop : MonoBehaviour
     {
         population = new Population(new PopulationConfig()
         {
-            PopulationSize = 5,
+            PopulationSize = 100,
             genomeConfig = new GenomeConfig()
             {
                 Inputs = 5,
                 Outpus = 4,
-                FullyConnected = true,
+                FullyConnected = false,
                 InitialRandomWeights = true,
 
                 MinWeight = -30f,
@@ -94,8 +107,8 @@ public class TrainLoop : MonoBehaviour
                 ReplaceWeightProb = 0.1f,
                 TweakMultiplier = 1f,
                 ConnDeleteProb = 0.012f,
-                ConnAddProb = 0.05f,
-                NodeAddProb = 0.02f,
+                ConnAddProb = 0.5f,
+                NodeAddProb = 0.2f,
                 NodeDeleteProb = 0.009f
             },
             speciesConfig = new SpeciesConfig()
@@ -106,12 +119,12 @@ public class TrainLoop : MonoBehaviour
             },
             stagnationConfig = new StagnationConfig()
             {
-                MaxStagnation = 20,
-                SpeciesElitism = 1
+                MaxStagnation = 2,
+                SpeciesElitism = 0
             },
             reproductionConfig = new ReproductionConfig()
             {
-                Elitism = 2,
+                Elitism = 0,
                 SurvivalThreshold = 0.2f
             }
         });
@@ -142,9 +155,31 @@ public class TrainLoop : MonoBehaviour
 
         trainingEnv.Bounds.OnOutOfBounds += () =>
         {
-            EndSession(trainingEnv);
+            // Prevent multiple event triggers from the same collision
+            if (trainingEnv.InProgress)
+            {
+                trainingEnv.Genome.Fitness -= OOBPunishment;
+                trainingEnv.InProgress = false;
+                EndSession(trainingEnv);
+            }
         };
-
+        trainingEnv.GroundHit.OnDestructiveHit += () =>
+        {
+            // Prevent multiple event triggers from the same collision
+            if (trainingEnv.InProgress)
+            {
+                trainingEnv.Genome.Fitness -= DestructiveHitPunishment;
+                trainingEnv.InProgress = false;
+                EndSession(trainingEnv);
+            }
+        };
+        trainingEnv.GroundHit.OnLegHit += () =>
+        {
+            if (trainingEnv.InProgress)
+            {
+                trainingEnv.Genome.Fitness += LegHitReward / trainingEnv.Rocket.GetComponent<Rigidbody>().linearVelocity.magnitude;
+            }
+        };
         return trainingEnv;
     }
 
@@ -177,6 +212,7 @@ public class TrainLoop : MonoBehaviour
     {
         AssignGenomesToEnvironments();
         SteerRockets();
+        UpdateFitness();
     }
 
     private void AssignGenomesToEnvironments()
@@ -186,15 +222,34 @@ public class TrainLoop : MonoBehaviour
             var genome = genomesToEvaluate.Dequeue();
             var env = availableEnvironments.Dequeue();
             env.AssignGenome(genome);
-            env.Rocket.transform.localPosition = new Vector3(0, RocketHeight, 0);
-            genome.Fitness = 0;
+            env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+            env.InProgress = true;
+            genome.Fitness = InitialFitness;
         }
     }
 
     private void EndSession(TrainingEnvironment env)
     {
+        env.Rocket.transform.localPosition = new Vector3(0, RocketHeight, 0);
+        env.Rocket.transform.rotation = Quaternion.identity;
+        env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+        env.InProgress = false;
+        foreach (var e in env.Rocket.engines)
+        {
+            e.SetThrust(0);
+        }
         env.DropGenome();
         availableEnvironments.Enqueue(env);
+
+        if (genomesToEvaluate.Count == 0 && availableEnvironments.Count == environments.Count)
+        {
+            population.StoreBest();
+            Debug.Log($"Generation {population.Generation} tested. Best fitness: {population.Best.Fitness}. Producing next generation");
+            File.WriteAllText($"../data/{Label}_{population.Generation}.json", JsonConvert.SerializeObject(population.Snapshot()));
+            population.NextGeneration();
+            genomesToEvaluate = new Queue<Genome>(population.GetAllGenomes());
+            Debug.Log($"New generation: {genomesToEvaluate.Count} genomes");
+        }
     }
 
     private void SteerRockets()
@@ -216,6 +271,21 @@ public class TrainLoop : MonoBehaviour
             {
                 env.Rocket.engines[i].SetThrust(output.Value);
                 i++;
+            }
+        }
+    }
+
+    private void UpdateFitness()
+    {
+        foreach (var env in environments)
+        {
+            if (env.Genome != null)
+            {
+                env.Genome.Fitness += HeightRewardPerSecond * Time.deltaTime / (env.Rocket.transform.position.y / RocketHeight + 1);
+                if (env.Genome.Fitness > 1000)
+                {
+                    EndSession(env);
+                }
             }
         }
     }

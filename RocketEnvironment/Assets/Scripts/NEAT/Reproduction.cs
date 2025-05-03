@@ -86,7 +86,7 @@ namespace NEAT
                     }
                 }
 
-                if (spawn < 0) continue;
+                if (spawn <= 0) continue;
 
                 var killCutoff = (int)Math.Ceiling(config.SurvivalThreshold * ancestors.Count);
                 ancestors = ancestors.Take(killCutoff).ToList();

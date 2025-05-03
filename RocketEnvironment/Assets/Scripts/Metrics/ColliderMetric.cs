@@ -1,19 +1,22 @@
 using System;
 using UnityEngine;
 
-public class ColliderMetric : MonoBehaviour, IMetric
+public class ColliderMetric : MonoBehaviour
 {
-    public bool isTouchingGround = false;
-    public float hitPunishment = 0f;
-    public const float BAD_HIT_PUNISHMENT = -1000f;
 
-    public float GetValue()
-    {
-        return hitPunishment;
-    }
+    public event Action OnDestructiveHit;
+    public event Action OnLegHit;
+
     private void OnCollisionEnter(Collision collision)
     {
-        hitPunishment = IsNonLegHit(collision) ? BAD_HIT_PUNISHMENT : 0f;
+        if (IsNonLegHit(collision))
+        {
+            OnDestructiveHit?.Invoke();
+        }
+        else
+        {
+            OnLegHit?.Invoke();
+        }
     }
 
     private bool IsNonLegHit(Collision collision)
@@ -28,5 +31,5 @@ public class ColliderMetric : MonoBehaviour, IMetric
 
         return false;
     }
-    
+
 }
