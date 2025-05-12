@@ -4,6 +4,8 @@ using NEAT;
 using System.Linq;
 using System.IO;
 using Newtonsoft.Json;
+using System.Collections;
+using System;
 
 public class TrainLoop : MonoBehaviour
 {
@@ -19,12 +21,14 @@ public class TrainLoop : MonoBehaviour
         public Genome Genome { private set; get; }
         public NeuralNetwork network;
         public bool InProgress = false;
+        public Coroutine timerCoroutine;
 
         public void AssignGenome(Genome genome)
         {
             Genome = genome;
             network = new NeuralNetwork(Genome.NodeGenes, Genome.ConnectionGenes);
             Debug.Log($"Assigned genome {genome.Id} to {Environment.name}");
+
         }
 
         public void DropGenome()
@@ -58,6 +62,7 @@ public class TrainLoop : MonoBehaviour
     private Queue<TrainingEnvironment> availableEnvironments = new Queue<TrainingEnvironment>();
 
     [Header("Fitness")]
+    public float SessionDuration = 30f;
     public float InitialFitness = 100f;
     public float OOBPunishment = 100f;
     public float DestructiveHitPunishment = 100f;
@@ -224,6 +229,10 @@ public class TrainLoop : MonoBehaviour
             env.AssignGenome(genome);
             env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
             env.InProgress = true;
+            env.timerCoroutine = StartCoroutine(Timer(SessionDuration, () =>
+            {
+                EndSession(env);
+            }));
             genome.Fitness = InitialFitness;
         }
     }
@@ -234,6 +243,8 @@ public class TrainLoop : MonoBehaviour
         env.Rocket.transform.rotation = Quaternion.identity;
         env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
         env.InProgress = false;
+        StopCoroutine(env.timerCoroutine);
+        env.timerCoroutine = null;
         foreach (var e in env.Rocket.engines)
         {
             e.SetThrust(0);
@@ -288,5 +299,11 @@ public class TrainLoop : MonoBehaviour
                 }
             }
         }
+    }
+
+    private IEnumerator Timer(float seconds, Action callback)
+    {
+        yield return new WaitForSeconds(seconds);
+        callback();
     }
 }

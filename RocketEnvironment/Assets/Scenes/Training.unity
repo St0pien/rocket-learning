@@ -416,6 +416,7 @@ MonoBehaviour:
   HorizontalOffset: 150
   VerticalOffset: 150
   RocketHeight: 20
+  SessionDuration: 30
   InitialFitness: 100
   OOBPunishment: 100
   DestructiveHitPunishment: 100
