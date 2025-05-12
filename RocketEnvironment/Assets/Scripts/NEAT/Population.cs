@@ -57,6 +57,10 @@ namespace NEAT
         {
             Generation++;
             var population = reproduction.Reproduce(genomeModule, species.Species, config.PopulationSize, Generation);
+            if (!population.ContainsKey(Best.Id))
+            {
+                population.Add(Best.Id, Best);
+            }
 
             if (species.Species.Count == 0)
             {
