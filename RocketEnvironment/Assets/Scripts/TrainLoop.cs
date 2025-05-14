@@ -54,7 +54,8 @@ public class TrainLoop : MonoBehaviour
     public float VerticalOffset = 150f;
 
     [Header("Initial settings")]
-    public float RocketHeight = 20f;
+    public float RocketHeightMin = 20f;
+    public float RocketHeightMax = 40f;
 
     private List<TrainingEnvironment> environments = new List<TrainingEnvironment>();
     private Population population;
@@ -132,8 +133,8 @@ public class TrainLoop : MonoBehaviour
             PopulationSize = PopulationSize,
             genomeConfig = new GenomeConfig()
             {
-                Inputs = 11,
-                Outpus = 4,
+                Inputs = 3,
+                Outpus = 1,
                 FullyConnected = FullyConnected,
                 InitialRandomWeights = InitialRandomWeights,
 
@@ -209,13 +210,22 @@ public class TrainLoop : MonoBehaviour
                 EndSession(trainingEnv);
             }
         };
+        trainingEnv.GroundHit.OnLegHit += (float velocity) =>
+        {
+            if (trainingEnv.InProgress)
+            {
+                var punishment = Math.Min(1000, LegHitVelocityPunishmentMultiplier * velocity);
+                Debug.Log($"{trainingEnv.Environment.name}: velocity punishment {punishment} {velocity}");
+                trainingEnv.Genome.Fitness -= punishment;
+            }
+        };
         return trainingEnv;
     }
 
     private GameObject SpawnRocket(Transform parent)
     {
         var rocket = Instantiate(rocketPrefab, parent);
-        rocket.transform.localPosition = new Vector3(0, RocketHeight, 0);
+        rocket.transform.localPosition = new Vector3(0, UnityEngine.Random.Range(RocketHeightMin, RocketHeightMax), 0);
 
         return rocket;
     }
@@ -251,7 +261,7 @@ public class TrainLoop : MonoBehaviour
             var genome = genomesToEvaluate.Dequeue();
             var env = availableEnvironments.Dequeue();
             env.AssignGenome(genome);
-            env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+            env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
             env.InProgress = true;
             env.timerCoroutine = StartCoroutine(Timer(SessionDuration, () =>
             {
@@ -268,7 +278,7 @@ public class TrainLoop : MonoBehaviour
 
     private void EndSession(TrainingEnvironment env)
     {
-        env.Rocket.transform.localPosition = new Vector3(0, RocketHeight, 0);
+        env.Rocket.transform.localPosition = new Vector3(0, UnityEngine.Random.Range(RocketHeightMin, RocketHeightMax), 0);
         // env.Rocket.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(0f, 360f), UnityEngine.Random.Range(0f, 360f), UnityEngine.Random.Range(0f, 360f));
         env.Rocket.transform.rotation = Quaternion.identity;
         // env.Rocket.transform.rotation = Quaternion.Euler(45, 45, 45);
@@ -304,22 +314,19 @@ public class TrainLoop : MonoBehaviour
             var outputs = env.network.Activate(new Dictionary<int, float>(){
                 {1, 1},
                 {2, env.Rocket.transform.position.y},
-                {3, env.Rocket.GetComponent<Rigidbody>().linearVelocity.x},
-                {4, env.Rocket.GetComponent<Rigidbody>().linearVelocity.y},
-                {5, env.Rocket.GetComponent<Rigidbody>().linearVelocity.z},
-                {6, env.Rocket.transform.up.x},
-                {7, env.Rocket.transform.up.y},
-                {8, env.Rocket.transform.up.z},
-                {9, env.Rocket.GetComponent<Rigidbody>().angularVelocity.x},
-                {10, env.Rocket.GetComponent<Rigidbody>().angularVelocity.y},
-                {11, env.Rocket.GetComponent<Rigidbody>().angularVelocity.z}
+                {3, env.Rocket.GetComponent<Rigidbody>().linearVelocity.y},
             });
 
-            int i = 0;
-            foreach (var output in outputs.OrderBy(o => o.Key))
+            // int i = 0;
+            // foreach (var output in outputs.OrderBy(o => o.Key))
+            // {
+            //     env.Rocket.engines[i].SetThrust(output.Value);
+            //     i++;
+            // }
+
+            foreach (var engine in env.Rocket.engines)
             {
-                env.Rocket.engines[i].SetThrust(output.Value);
-                i++;
+                engine.SetThrust(outputs.First().Value);
             }
         }
     }
@@ -330,15 +337,18 @@ public class TrainLoop : MonoBehaviour
         {
             if (env.Genome != null)
             {
-                float normalizedHeightReward = 1 / (env.Rocket.transform.position.y + 1);
+                float normalizedHeightReward = env.Rocket.transform.position.y <= RocketHeightMax ? (RocketHeightMax - env.Rocket.transform.position.y) / RocketHeightMax : 0;
                 env.Genome.Fitness += normalizedHeightReward * Time.deltaTime * HeightRewardPerSecond;
 
                 env.Genome.Fitness += LegPlacementRewardPerSecond * Time.deltaTime * env.GroundHit.LegCount * env.GroundHit.LegCount;
 
                 env.Genome.Fitness -= env.Rocket.GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * VelocityPunishmentPerSecond;
-                env.Genome.Fitness -= env.Rocket.GetComponent<Rigidbody>().angularVelocity.magnitude * Time.deltaTime * AngularVelocityPunishmentPerSecond;
+                // env.Genome.Fitness -= env.Rocket.GetComponent<Rigidbody>().angularVelocity.magnitude * Time.deltaTime * AngularVelocityPunishmentPerSecond;
                 float angle = Vector3.Angle(env.Rocket.transform.up, Vector3.up);
-                env.Genome.Fitness -= angle / 180 * Time.deltaTime * AnglePunishmentPerSecond;
+                // env.Genome.Fitness -= angle / 180 * Time.deltaTime * AnglePunishmentPerSecond;
+
+
+                // Debug.Log($"fitness {env.Environment.name}: {env.Genome.Fitness}");
             }
         }
     }

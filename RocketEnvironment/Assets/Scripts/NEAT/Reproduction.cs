@@ -36,7 +36,7 @@ namespace NEAT
             }).ToDictionary(g => g.Id);
         }
 
-        public Dictionary<int, Genome> Reproduce(GenomeModule genomeModule, Dictionary<int, Species> species, int popSize, int generation)
+        public Dictionary<int, Genome> Reproduce(GenomeModule genomeModule, Dictionary<int, Species> species, int popSize, int generation, int BestId)
         {
             // Remove stagnant species
             var stagnant = stagnation.MarkStagnant(species, generation);
@@ -97,7 +97,10 @@ namespace NEAT
                     var p2 = ancestors[UnityEngine.Random.Range(0, ancestors.Count)];
 
                     var child = Crossover(p1, p2, genomeModule);
-                    child.Mutate();
+                    if (child.Id != BestId)
+                    {
+                        child.Mutate();
+                    }
                     result.Add(child.Id, child);
                 }
             }

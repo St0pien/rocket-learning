@@ -387,7 +387,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1905732061}
   - component: {fileID: 1905732060}
-  - component: {fileID: 1905732062}
   m_Layer: 0
   m_Name: Trainer
   m_TagString: Untagged
@@ -407,25 +406,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e798457707df9242be733ee1324e80d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Label: simple
+  Label: more nodes
   rocketPrefab: {fileID: 5166055379238750585, guid: a89b6c55acf152b40a0b84b58720a72d, type: 3}
   groundPrefab: {fileID: 2000013144018167807, guid: eaf875417b0de2247be33996487cd8b9, type: 3}
   oobPrefab: {fileID: 2889637812631211762, guid: 7eb8104bb514ec6448b2486e6c4e3b9e, type: 3}
   EnvWidth: 10
   EnvHeight: 10
-  HorizontalOffset: 150
-  VerticalOffset: 150
-  RocketHeight: 100
+  HorizontalOffset: 35
+  VerticalOffset: 35
+  RocketHeightMin: 100
+  RocketHeightMax: 250
   SessionDuration: 30
   InitialFitness: 0
   OOBPunishment: 300
   DestructiveHitPunishment: 600
-  LegPlacementRewardPerSecond: 0.01
-  LegHitVelocityPunishmentMultiplier: 0
-  HeightRewardPerSecond: 20
-  VelocityPunishmentPerSecond: 0.1
-  AngularVelocityPunishmentPerSecond: 2
-  AnglePunishmentPerSecond: 3
+  LegPlacementRewardPerSecond: 1
+  LegHitVelocityPunishmentMultiplier: 4
+  HeightRewardPerSecond: 0
+  VelocityPunishmentPerSecond: 0
+  AngularVelocityPunishmentPerSecond: 0
+  AnglePunishmentPerSecond: 0
   PopulationSize: 200
   FullyConnected: 1
   InitialRandomWeights: 1
@@ -434,17 +434,17 @@ MonoBehaviour:
   TweakWeightProb: 0.8
   ReplaceWeightProb: 0.1
   TweakMultiplier: 0.5
-  ConnDeleteProb: 0.25
-  ConnAddProb: 0.5
-  NodeAddProb: 0.2
-  NodeDeleteProb: 0.1
+  ConnDeleteProb: 0.4
+  ConnAddProb: 0.2
+  NodeAddProb: 0.4
+  NodeDeleteProb: 0.3
   CompatibilityDisjointCoefficient: 1
   CompatibilityWeightCoefficient: 0.6
   CompatibilityThreshold: 5
-  MaxStagnation: 10
+  MaxStagnation: 20
   SpeciesElitism: 1
   Elitism: 0
-  SurvivalThreshold: 0.2
+  SurvivalThreshold: 0.5
 --- !u!4 &1905732061
 Transform:
   m_ObjectHideFlags: 0
@@ -460,19 +460,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1905732062
+--- !u!1 &2043063010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2043063012}
+  - component: {fileID: 2043063011}
+  m_Layer: 0
+  m_Name: Input
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &2043063011
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1905732059}
+  m_GameObject: {fileID: 2043063010}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ae00a2b8c4b9822418b1df129f85009a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   rocket: {fileID: 0}
+--- !u!4 &2043063012
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2043063010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.461421, y: 0.91261506, z: -0.34250832}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -480,3 +512,4 @@ SceneRoots:
   - {fileID: 563084773}
   - {fileID: 579466326}
   - {fileID: 1905732061}
+  - {fileID: 2043063012}
