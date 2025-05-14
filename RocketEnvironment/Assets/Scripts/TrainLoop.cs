@@ -13,6 +13,7 @@ public class TrainLoop : MonoBehaviour
     private class TrainingEnvironment
     {
         public GameObject Environment;
+        public GameObject Ground;
         public Rocket Rocket;
         public LandingVelocityMetric LandingVelocity;
         public ColliderMetric GroundHit;
@@ -28,7 +29,6 @@ public class TrainLoop : MonoBehaviour
             Genome = genome;
             network = new NeuralNetwork(Genome.NodeGenes, Genome.ConnectionGenes);
             Debug.Log($"Assigned genome {genome.Id} to {Environment.name}");
-
         }
 
         public void DropGenome()
@@ -66,9 +66,40 @@ public class TrainLoop : MonoBehaviour
     public float InitialFitness = 100f;
     public float OOBPunishment = 100f;
     public float DestructiveHitPunishment = 100f;
-    public float LegHitReward = 300f;
+    public float LegPlacementRewardPerSecond = 2f;
     public float LegHitVelocityPunishmentMultiplier = 5f;
     public float HeightRewardPerSecond = 1f;
+    public float VelocityPunishmentPerSecond = 1f;
+    public float AngularVelocityPunishmentPerSecond = 1f;
+    public float AnglePunishmentPerSecond = 1f;
+
+    [Header("Evolution")]
+    public int PopulationSize = 150;
+    public bool FullyConnected = false;
+    public bool InitialRandomWeights = true;
+    public float MinWeight = -30;
+    public float MaxWeight = -30;
+    public float TweakWeightProb = 0.8f;
+    public float ReplaceWeightProb = 0.1f;
+    public float TweakMultiplier = 1f;
+    public float ConnDeleteProb = 0.012f;
+    public float ConnAddProb = 0.012f;
+    public float NodeAddProb = 0.2f;
+    public float NodeDeleteProb = 0.009f;
+
+    [Header("Speciation")]
+
+    public float CompatibilityDisjointCoefficient = 1f;
+    public float CompatibilityWeightCoefficient = 0.4f;
+    public float CompatibilityThreshold = 5f;
+
+    [Header("Stagnation")]
+    public int MaxStagnation = 10;
+    public int SpeciesElitism = 1;
+
+    [Header("Reproduction")]
+    public int Elitism = 0;
+    public float SurvivalThreshold = 0.2f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -98,39 +129,39 @@ public class TrainLoop : MonoBehaviour
     {
         population = new Population(new PopulationConfig()
         {
-            PopulationSize = 100,
+            PopulationSize = PopulationSize,
             genomeConfig = new GenomeConfig()
             {
-                Inputs = 5,
+                Inputs = 11,
                 Outpus = 4,
-                FullyConnected = false,
-                InitialRandomWeights = true,
+                FullyConnected = FullyConnected,
+                InitialRandomWeights = InitialRandomWeights,
 
-                MinWeight = -30f,
-                MaxWeight = 30f,
-                TweakWeightProb = 0.8f,
-                ReplaceWeightProb = 0.1f,
-                TweakMultiplier = 1f,
-                ConnDeleteProb = 0.012f,
-                ConnAddProb = 0.5f,
-                NodeAddProb = 0.2f,
-                NodeDeleteProb = 0.009f
+                MinWeight = MinWeight,
+                MaxWeight = MaxWeight,
+                TweakWeightProb = TweakWeightProb,
+                ReplaceWeightProb = ReplaceWeightProb,
+                TweakMultiplier = TweakMultiplier,
+                ConnDeleteProb = ConnDeleteProb,
+                ConnAddProb = ConnAddProb,
+                NodeAddProb = NodeAddProb,
+                NodeDeleteProb = NodeDeleteProb
             },
             speciesConfig = new SpeciesConfig()
             {
-                CompatibilityDisjointCoefficient = 1f,
-                CompatibilityWeightCoefficient = 0.4f,
-                CompatibilityThreshold = 5f,
+                CompatibilityDisjointCoefficient = CompatibilityDisjointCoefficient,
+                CompatibilityWeightCoefficient = CompatibilityWeightCoefficient,
+                CompatibilityThreshold = CompatibilityThreshold,
             },
             stagnationConfig = new StagnationConfig()
             {
-                MaxStagnation = 2,
-                SpeciesElitism = 0
+                MaxStagnation = MaxStagnation,
+                SpeciesElitism = SpeciesElitism
             },
             reproductionConfig = new ReproductionConfig()
             {
-                Elitism = 0,
-                SurvivalThreshold = 0.2f
+                Elitism = Elitism,
+                SurvivalThreshold = SurvivalThreshold
             }
         });
         population.Init();
@@ -151,6 +182,7 @@ public class TrainLoop : MonoBehaviour
         var trainingEnv = new TrainingEnvironment()
         {
             Environment = env,
+            Ground = ground,
             Rocket = rocket.GetComponent<Rocket>(),
             LandingVelocity = rocket.GetComponent<LandingVelocityMetric>(),
             GroundHit = ground.GetComponent<ColliderMetric>(),
@@ -174,15 +206,7 @@ public class TrainLoop : MonoBehaviour
             if (trainingEnv.InProgress)
             {
                 trainingEnv.Genome.Fitness -= DestructiveHitPunishment;
-                trainingEnv.InProgress = false;
                 EndSession(trainingEnv);
-            }
-        };
-        trainingEnv.GroundHit.OnLegHit += () =>
-        {
-            if (trainingEnv.InProgress)
-            {
-                trainingEnv.Genome.Fitness += LegHitReward / trainingEnv.Rocket.GetComponent<Rigidbody>().linearVelocity.magnitude;
             }
         };
         return trainingEnv;
@@ -234,13 +258,20 @@ public class TrainLoop : MonoBehaviour
                 EndSession(env);
             }));
             genome.Fitness = InitialFitness;
+
+            if (population.Best != null && genome.Id == population.Best.Id)
+            {
+                env.Ground.GetComponent<MeshRenderer>().materials[0].color = Color.green;
+            }
         }
     }
 
     private void EndSession(TrainingEnvironment env)
     {
         env.Rocket.transform.localPosition = new Vector3(0, RocketHeight, 0);
+        // env.Rocket.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(0f, 360f), UnityEngine.Random.Range(0f, 360f), UnityEngine.Random.Range(0f, 360f));
         env.Rocket.transform.rotation = Quaternion.identity;
+        // env.Rocket.transform.rotation = Quaternion.Euler(45, 45, 45);
         env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
         env.InProgress = false;
         StopCoroutine(env.timerCoroutine);
@@ -251,6 +282,7 @@ public class TrainLoop : MonoBehaviour
         }
         env.DropGenome();
         availableEnvironments.Enqueue(env);
+        env.Ground.GetComponent<MeshRenderer>().materials[0].color = Color.gray;
 
         if (genomesToEvaluate.Count == 0 && availableEnvironments.Count == environments.Count)
         {
@@ -271,10 +303,16 @@ public class TrainLoop : MonoBehaviour
 
             var outputs = env.network.Activate(new Dictionary<int, float>(){
                 {1, 1},
-                {2, env.Distances[0].GetValue()},
-                {3, env.Distances[1].GetValue()},
-                {4, env.Distances[2].GetValue()},
-                {5, env.Distances[3].GetValue()},
+                {2, env.Rocket.transform.position.y},
+                {3, env.Rocket.GetComponent<Rigidbody>().linearVelocity.x},
+                {4, env.Rocket.GetComponent<Rigidbody>().linearVelocity.y},
+                {5, env.Rocket.GetComponent<Rigidbody>().linearVelocity.z},
+                {6, env.Rocket.transform.up.x},
+                {7, env.Rocket.transform.up.y},
+                {8, env.Rocket.transform.up.z},
+                {9, env.Rocket.GetComponent<Rigidbody>().angularVelocity.x},
+                {10, env.Rocket.GetComponent<Rigidbody>().angularVelocity.y},
+                {11, env.Rocket.GetComponent<Rigidbody>().angularVelocity.z}
             });
 
             int i = 0;
@@ -292,11 +330,15 @@ public class TrainLoop : MonoBehaviour
         {
             if (env.Genome != null)
             {
-                env.Genome.Fitness += HeightRewardPerSecond * Time.deltaTime / (env.Rocket.transform.position.y / RocketHeight + 1);
-                if (env.Genome.Fitness > 1000)
-                {
-                    EndSession(env);
-                }
+                float normalizedHeightReward = 1 / (env.Rocket.transform.position.y + 1);
+                env.Genome.Fitness += normalizedHeightReward * Time.deltaTime * HeightRewardPerSecond;
+
+                env.Genome.Fitness += LegPlacementRewardPerSecond * Time.deltaTime * env.GroundHit.LegCount * env.GroundHit.LegCount;
+
+                env.Genome.Fitness -= env.Rocket.GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * VelocityPunishmentPerSecond;
+                env.Genome.Fitness -= env.Rocket.GetComponent<Rigidbody>().angularVelocity.magnitude * Time.deltaTime * AngularVelocityPunishmentPerSecond;
+                float angle = Vector3.Angle(env.Rocket.transform.up, Vector3.up);
+                env.Genome.Fitness -= angle / 180 * Time.deltaTime * AnglePunishmentPerSecond;
             }
         }
     }

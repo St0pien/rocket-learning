@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ColliderMetric : MonoBehaviour
@@ -6,6 +7,7 @@ public class ColliderMetric : MonoBehaviour
 
     public event Action OnDestructiveHit;
     public event Action OnLegHit;
+    public int LegCount { private set; get; } = 0;
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -15,7 +17,16 @@ public class ColliderMetric : MonoBehaviour
         }
         else
         {
+            LegCount++;
             OnLegHit?.Invoke();
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (!IsNonLegHit(collision))
+        {
+            LegCount--;
         }
     }
 
@@ -31,5 +42,4 @@ public class ColliderMetric : MonoBehaviour
 
         return false;
     }
-
 }

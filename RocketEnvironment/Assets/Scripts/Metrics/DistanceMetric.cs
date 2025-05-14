@@ -60,7 +60,7 @@ public class DistanceMetric : MonoBehaviour, IMetric
             if (Physics.Raycast(ray, out hit))
             {
                 distances.Add(Vector3.Distance(objectTransform.position, hit.point));
-                Debug.DrawRay(objectTransform.position, dir * 10000f, Color.green, 1f);
+                // Debug.DrawRay(objectTransform.position, dir * 10000f, Color.green, 1f);
             }
         }
 

@@ -407,22 +407,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e798457707df9242be733ee1324e80d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Label: env
+  Label: simple
   rocketPrefab: {fileID: 5166055379238750585, guid: a89b6c55acf152b40a0b84b58720a72d, type: 3}
   groundPrefab: {fileID: 2000013144018167807, guid: eaf875417b0de2247be33996487cd8b9, type: 3}
   oobPrefab: {fileID: 2889637812631211762, guid: 7eb8104bb514ec6448b2486e6c4e3b9e, type: 3}
-  EnvWidth: 8
-  EnvHeight: 8
+  EnvWidth: 10
+  EnvHeight: 10
   HorizontalOffset: 150
   VerticalOffset: 150
-  RocketHeight: 20
+  RocketHeight: 100
   SessionDuration: 30
-  InitialFitness: 100
-  OOBPunishment: 100
-  DestructiveHitPunishment: 100
-  LegHitReward: 300
-  LegHitVelocityPunishmentMultiplier: 5
-  HeightRewardPerSecond: 1
+  InitialFitness: 0
+  OOBPunishment: 300
+  DestructiveHitPunishment: 600
+  LegPlacementRewardPerSecond: 0.01
+  LegHitVelocityPunishmentMultiplier: 0
+  HeightRewardPerSecond: 20
+  VelocityPunishmentPerSecond: 0.1
+  AngularVelocityPunishmentPerSecond: 2
+  AnglePunishmentPerSecond: 3
+  PopulationSize: 200
+  FullyConnected: 1
+  InitialRandomWeights: 1
+  MinWeight: -30
+  MaxWeight: 30
+  TweakWeightProb: 0.8
+  ReplaceWeightProb: 0.1
+  TweakMultiplier: 0.5
+  ConnDeleteProb: 0.25
+  ConnAddProb: 0.5
+  NodeAddProb: 0.2
+  NodeDeleteProb: 0.1
+  CompatibilityDisjointCoefficient: 1
+  CompatibilityWeightCoefficient: 0.6
+  CompatibilityThreshold: 5
+  MaxStagnation: 10
+  SpeciesElitism: 1
+  Elitism: 0
+  SurvivalThreshold: 0.2
 --- !u!4 &1905732061
 Transform:
   m_ObjectHideFlags: 0

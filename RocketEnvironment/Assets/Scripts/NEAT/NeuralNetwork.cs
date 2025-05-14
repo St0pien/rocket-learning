@@ -8,7 +8,7 @@ namespace NEAT
     {
         public static float Sigmoid(float x)
         {
-            return 1 / (1 + MathF.Exp(-4.9f * x));
+            return 1 / (1 + MathF.Exp(-x));
         }
     }
 

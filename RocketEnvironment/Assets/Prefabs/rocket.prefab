@@ -274,7 +274,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5166055379238750585}
   serializedVersion: 4
-  m_Mass: 200
+  m_Mass: 10
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -292,7 +292,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!114 &8277333971347853104
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -315,7 +315,7 @@ MonoBehaviour:
   - id: 4
     transform: {fileID: 2364055339435166443}
   firePrefab: {fileID: 2535098716718435557, guid: 94971d6cc6b377a4aa7af01a101e30cc, type: 3}
-  engineThrustMultiplier: 500
+  engineThrustMultiplier: 41
 --- !u!114 &7102210492984535346
 MonoBehaviour:
   m_ObjectHideFlags: 0
