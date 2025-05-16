@@ -88,7 +88,7 @@ public class TrainingLoopTest
     {
         var population = new Population(new PopulationConfig()
         {
-            PopulationSize = 250,
+            PopulationSize = 300,
             genomeConfig = new GenomeConfig()
             {
                 Inputs = 3,
@@ -100,21 +100,21 @@ public class TrainingLoopTest
                 MaxWeight = 30f,
                 TweakWeightProb = 0.9f,
                 ReplaceWeightProb = 0.1f,
-                TweakMultiplier = 5f,
-                ConnDeleteProb = 0.15f,
+                TweakMultiplier = 2f,
+                ConnDeleteProb = 0.2f,
                 ConnAddProb = 0.3f,
-                NodeAddProb = 0.3f,
-                NodeDeleteProb = 0.2f
+                NodeAddProb = 0.05f,
+                NodeDeleteProb = 0.05f
             },
             speciesConfig = new SpeciesConfig()
             {
                 CompatibilityDisjointCoefficient = 1f,
-                CompatibilityWeightCoefficient = 0.6f,
-                CompatibilityThreshold = 3f,
+                CompatibilityWeightCoefficient = 0.5f,
+                CompatibilityThreshold = 4f,
             },
             stagnationConfig = new StagnationConfig()
             {
-                MaxStagnation = 5,
+                MaxStagnation = 2,
                 SpeciesElitism = 1
             },
             reproductionConfig = new ReproductionConfig()
