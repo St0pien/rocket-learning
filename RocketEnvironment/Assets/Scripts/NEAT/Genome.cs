@@ -39,6 +39,11 @@ namespace NEAT
             LastConnectionId = config.FullyConnected ? config.Inputs * config.Outpus : 0;
         }
 
+        public void SetLastNodeId(int id)
+        {
+            LastNodeId = id;
+        }
+
         public int GetNextNodeId(Connection conn)
         {
             if (introducedNodes.ContainsKey(conn))
@@ -48,6 +53,11 @@ namespace NEAT
 
             introducedNodes[conn] = ++LastNodeId;
             return introducedNodes[conn];
+        }
+
+        public void SetLastConnectionId(int id)
+        {
+            LastConnectionId = id;
         }
 
         public int GetNextConnectionId(Connection conn)

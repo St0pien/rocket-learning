@@ -28,16 +28,36 @@ public class GenomeInput : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var outputs = network.Activate(new Dictionary<int, float>(){
-            {1, 1},
-            {2, rocket.transform.position.y},
-            {3, rb.linearVelocity.y}
-        });
+        // var outputs = network.Activate(new Dictionary<int, float>(){
+        //     {1, 1},
+        //     {2, rocket.transform.position.y},
+        //     {3, rb.linearVelocity.y}
+        // });
 
-        var thrust = outputs.First().Value;
-        foreach (var engine in rocket.engines)
+
+        var outputs = network.Activate(new Dictionary<int, float>(){
+                {1, 1},
+                {2, rocket.transform.position.y},
+                {3, rb.linearVelocity.x},
+                {4, rb.linearVelocity.y},
+                {5, rb.linearVelocity.z},
+                {6, rocket.transform.up.x},
+                {7, rocket.transform.up.y},
+                {8, rocket.transform.up.z},
+            });
+
+        // var thrust = outputs.First().Value;
+        // foreach (var engine in rocket.engines)
+        // {
+        //     engine.SetThrust(thrust);
+        // }
+
+        int i = 0;
+        foreach (var output in outputs.OrderBy(o => o.Key))
         {
-            engine.SetThrust(thrust);
+            rocket.engines[i].SetThrust(output.Value);
+            i++;
         }
+
     }
 }

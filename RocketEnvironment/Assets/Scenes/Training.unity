@@ -406,20 +406,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e798457707df9242be733ee1324e80d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Label: more nodes
+  Label: stage2
   rocketPrefab: {fileID: 5166055379238750585, guid: a89b6c55acf152b40a0b84b58720a72d, type: 3}
   groundPrefab: {fileID: 2000013144018167807, guid: eaf875417b0de2247be33996487cd8b9, type: 3}
   oobPrefab: {fileID: 2889637812631211762, guid: 7eb8104bb514ec6448b2486e6c4e3b9e, type: 3}
   EnvWidth: 10
   EnvHeight: 10
-  HorizontalOffset: 35
-  VerticalOffset: 35
+  HorizontalOffset: 110
+  VerticalOffset: 110
   RocketHeightMin: 100
   RocketHeightMax: 250
   SessionDuration: 30
   InitialFitness: 0
-  OOBPunishment: 300
-  DestructiveHitPunishment: 600
+  OOBPunishment: 500
+  DestructiveHitPunishment: 800
   LegPlacementRewardPerSecond: 1
   LegHitVelocityPunishmentMultiplier: 4
   HeightRewardPerSecond: 0
@@ -434,8 +434,8 @@ MonoBehaviour:
   TweakWeightProb: 0.8
   ReplaceWeightProb: 0.1
   TweakMultiplier: 0.5
-  ConnDeleteProb: 0.4
-  ConnAddProb: 0.2
+  ConnDeleteProb: 0.3
+  ConnAddProb: 0.4
   NodeAddProb: 0.4
   NodeDeleteProb: 0.3
   CompatibilityDisjointCoefficient: 1

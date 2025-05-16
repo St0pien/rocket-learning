@@ -37,6 +37,18 @@ namespace NEAT
             species.Speciate(population, Generation);
         }
 
+        public void LoadFromSnapshot(GenerationSnapshot snapshot)
+        {
+            var population = snapshot.Species.SelectMany(s => s.Value.Members.Values).ToDictionary(g => g.Id);
+            species.Speciate(population, Generation);
+            var lastGenome = population.Values.Select(g => g.Id).Max();
+            var lastNode = population.Values.SelectMany(g => g.NodeGenes.Values.Select(n => n.Id)).Max();
+            var lastConnection = population.Values.SelectMany(g => g.ConnectionGenes.Values.Select(c => c.Id)).Max();
+            reproduction.SetLastGenomeId(lastGenome);
+            genomeModule.SetLastNodeId(lastNode);
+            genomeModule.SetLastConnectionId(lastConnection);
+        }
+
         public void StoreBest()
         {
             var generationBest = GetAllGenomes().OrderByDescending(g => g.Fitness).First();

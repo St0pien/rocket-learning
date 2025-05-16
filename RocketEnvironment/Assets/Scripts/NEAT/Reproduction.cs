@@ -26,6 +26,11 @@ namespace NEAT
             this.stagnation = stagnation;
         }
 
+        public void SetLastGenomeId(int id)
+        {
+            LastGenomeId = id;
+        }
+
         public Dictionary<int, Genome> GetInitialPopulation(GenomeModule genomeModule, int size)
         {
             return Enumerable.Range(0, size).Select(_ =>

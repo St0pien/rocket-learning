@@ -133,8 +133,8 @@ public class TrainLoop : MonoBehaviour
             PopulationSize = PopulationSize,
             genomeConfig = new GenomeConfig()
             {
-                Inputs = 3,
-                Outpus = 1,
+                Inputs = 8,
+                Outpus = 4,
                 FullyConnected = FullyConnected,
                 InitialRandomWeights = InitialRandomWeights,
 
@@ -165,7 +165,9 @@ public class TrainLoop : MonoBehaviour
                 SurvivalThreshold = SurvivalThreshold
             }
         });
-        population.Init();
+        // population.Init();
+        var snapshot = JsonConvert.DeserializeObject<GenerationSnapshot>(File.ReadAllText("../data/stage1_19.json"));
+        population.LoadFromSnapshot(snapshot);
 
         genomesToEvaluate = new Queue<Genome>(population.GetAllGenomes());
         Debug.Log($"Initial population spawned: {genomesToEvaluate.Count} genomes");
@@ -261,7 +263,7 @@ public class TrainLoop : MonoBehaviour
             var genome = genomesToEvaluate.Dequeue();
             var env = availableEnvironments.Dequeue();
             env.AssignGenome(genome);
-            env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+            env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
             env.InProgress = true;
             env.timerCoroutine = StartCoroutine(Timer(SessionDuration, () =>
             {
@@ -279,7 +281,7 @@ public class TrainLoop : MonoBehaviour
     private void EndSession(TrainingEnvironment env)
     {
         env.Rocket.transform.localPosition = new Vector3(0, UnityEngine.Random.Range(RocketHeightMin, RocketHeightMax), 0);
-        // env.Rocket.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(0f, 360f), UnityEngine.Random.Range(0f, 360f), UnityEngine.Random.Range(0f, 360f));
+        // env.Rocket.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(-45f, 45f), UnityEngine.Random.Range(-45f, 45f), UnityEngine.Random.Range(-45f, 45f));
         env.Rocket.transform.rotation = Quaternion.identity;
         // env.Rocket.transform.rotation = Quaternion.Euler(45, 45, 45);
         env.Rocket.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
@@ -314,20 +316,25 @@ public class TrainLoop : MonoBehaviour
             var outputs = env.network.Activate(new Dictionary<int, float>(){
                 {1, 1},
                 {2, env.Rocket.transform.position.y},
-                {3, env.Rocket.GetComponent<Rigidbody>().linearVelocity.y},
+                {3, env.Rocket.GetComponent<Rigidbody>().linearVelocity.x},
+                {4, env.Rocket.GetComponent<Rigidbody>().linearVelocity.y},
+                {5, env.Rocket.GetComponent<Rigidbody>().linearVelocity.z},
+                {6, env.Rocket.transform.up.x},
+                {7, env.Rocket.transform.up.y},
+                {8, env.Rocket.transform.up.z},
             });
 
-            // int i = 0;
-            // foreach (var output in outputs.OrderBy(o => o.Key))
-            // {
-            //     env.Rocket.engines[i].SetThrust(output.Value);
-            //     i++;
-            // }
-
-            foreach (var engine in env.Rocket.engines)
+            int i = 0;
+            foreach (var output in outputs.OrderBy(o => o.Key))
             {
-                engine.SetThrust(outputs.First().Value);
+                env.Rocket.engines[i].SetThrust(output.Value);
+                i++;
             }
+
+            // foreach (var engine in env.Rocket.engines)
+            // {
+            //     engine.SetThrust(outputs.First().Value);
+            // }
         }
     }
 
