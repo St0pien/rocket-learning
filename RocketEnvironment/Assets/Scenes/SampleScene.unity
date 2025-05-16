@@ -451,6 +451,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f3328c0aca5b1d40982add063dad2c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rocket: {fileID: 1099426990}
   JsonPath: ../data/more nodes_19.json
 --- !u!1 &832575517
 GameObject:

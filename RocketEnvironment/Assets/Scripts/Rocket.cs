@@ -41,7 +41,8 @@ public class Rocket : MonoBehaviour
             fireFX.Play();
 
             var main = fireFX.main;
-            main.startLifetime = maxParticleLifetime * thrust;
+            // main.startLifetime = maxParticleLifetime * thrust;
+            main.startLifetime = main.startLifetime.constant + Time.deltaTime * 100 * (maxParticleLifetime * thrust - main.startLifetime.constant);
         }
     }
 
