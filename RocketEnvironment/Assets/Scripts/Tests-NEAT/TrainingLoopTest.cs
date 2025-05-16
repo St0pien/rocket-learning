@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using NEAT;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -153,29 +154,28 @@ public class TrainingLoopTest
         }
     }
 
-    public float f(float x, float y)
+    public float f(float x)
     {
-        return x * x + y * y + -10 * x * y;
+        return (x - 0.25f) * (x - 0.25f);
     }
     public float RationalFitness(Genome genome)
     {
         var net = new NeuralNetwork(genome.NodeGenes, genome.ConnectionGenes);
 
         var err = 0f;
-        for (float i = -10; i < 10; i += 0.5f)
+        var count = 0;
+        for (float i = -1; i < 1; i += 0.01f)
         {
-            for (float j = -10; j < 10; j += 0.5f)
-            {
-                var pred = net.Activate(new Dictionary<int, float>() {
-                    {1, i},
-                    {2, j}
+            var pred = net.Activate(new Dictionary<int, float>() {
+                    {1, 1},
+                    {2, i}
                 }).First().Value;
-                var e = f(i, j) - pred;
-                err += Math.Abs(e);
-            }
+            var e = f(i) - pred;
+            err += e * e;
+            count++;
         }
 
-        return 100000 - err;
+        return -(float)Math.Sqrt(err / count);
     }
 
     [Test]
@@ -183,7 +183,8 @@ public class TrainingLoopTest
     {
         var population = new Population(new PopulationConfig()
         {
-            PopulationSize = 150,
+
+            PopulationSize = 100,
             genomeConfig = new GenomeConfig()
             {
                 Inputs = 2,
@@ -193,30 +194,31 @@ public class TrainingLoopTest
 
                 MinWeight = -30f,
                 MaxWeight = 30f,
-                TweakWeightProb = 0.8f,
-                ReplaceWeightProb = 0.2f,
-                TweakMultiplier = 1f,
-                ConnDeleteProb = 0.002f,
-                ConnAddProb = 0.2f,
-                NodeAddProb = 0.1f,
-                NodeDeleteProb = 0.01f
+                TweakWeightProb = 0.9f,
+                ReplaceWeightProb = 0.1f,
+                TweakMultiplier = 2f,
+                ConnDeleteProb = 0.2f,
+                ConnAddProb = 0.3f,
+                NodeAddProb = 0.05f,
+                NodeDeleteProb = 0.05f
             },
             speciesConfig = new SpeciesConfig()
             {
                 CompatibilityDisjointCoefficient = 1f,
-                CompatibilityWeightCoefficient = 0.4f,
-                CompatibilityThreshold = 5f,
+                CompatibilityWeightCoefficient = 0.5f,
+                CompatibilityThreshold = 4f,
             },
             stagnationConfig = new StagnationConfig()
             {
-                MaxStagnation = 20,
-                SpeciesElitism = 2
+                MaxStagnation = 2,
+                SpeciesElitism = 1
             },
             reproductionConfig = new ReproductionConfig()
             {
-                Elitism = 2,
+                Elitism = 0,
                 SurvivalThreshold = 0.2f
             }
+
         });
 
         population.Init();
@@ -233,8 +235,29 @@ public class TrainingLoopTest
             {
                 g.Fitness = RationalFitness(g);
             }
+            population.StoreBest();
             File.WriteAllText($"../data/rational_{i}.json", JsonConvert.SerializeObject(population.Snapshot()));
         }
 
+
+        var net = new NeuralNetwork(population.Best.NodeGenes, population.Best.ConnectionGenes);
+        var xs = new List<float>();
+        var ys = new List<float>();
+        for (float i = -1; i < 1; i += 0.01f)
+        {
+            var pred = net.Activate(new Dictionary<int, float>() {
+                    {1, 1},
+                    {2, i}
+                }).First().Value;
+            xs.Add(i);
+            ys.Add(pred);
+        }
+
+
+        File.WriteAllText("../data/plots.json", JsonConvert.SerializeObject(new Dictionary<string, List<float>>()
+        {
+            {"x", xs},
+            {"y", ys}
+         }));
     }
 }
