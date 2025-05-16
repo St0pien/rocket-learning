@@ -452,7 +452,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rocket: {fileID: 1099426990}
-  JsonPath: ../data/more nodes_19.json
+  JsonPath: ../data/final2_300.json
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0

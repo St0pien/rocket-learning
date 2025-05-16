@@ -342,7 +342,7 @@ public class TrainLoop : MonoBehaviour
 
                 env.Genome.Fitness += LegPlacementRewardPerSecond * Time.deltaTime * env.GroundHit.LegCount * env.GroundHit.LegCount;
 
-                env.Genome.Fitness -= env.Rocket.GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * VelocityPunishmentPerSecond;
+                env.Genome.Fitness -= Mathf.Pow(env.Rocket.GetComponent<Rigidbody>().linearVelocity.magnitude, 2) * Time.deltaTime * VelocityPunishmentPerSecond;
                 // env.Genome.Fitness -= env.Rocket.GetComponent<Rigidbody>().angularVelocity.magnitude * Time.deltaTime * AngularVelocityPunishmentPerSecond;
                 float angle = Vector3.Angle(env.Rocket.transform.up, Vector3.up);
                 // env.Genome.Fitness -= angle / 180 * Time.deltaTime * AnglePunishmentPerSecond;

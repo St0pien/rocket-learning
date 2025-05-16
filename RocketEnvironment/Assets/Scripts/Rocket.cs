@@ -66,7 +66,7 @@ public class Rocket : MonoBehaviour
     {
         foreach (var engine in engines)
         {
-            rb.AddForceAtPosition(engine.thrustVector * engineThrustMultiplier, engine.transform.position);
+            rb.AddForceAtPosition(engine.thrustVector * engineThrustMultiplier * Time.deltaTime, engine.transform.position);
         }
     }
 }

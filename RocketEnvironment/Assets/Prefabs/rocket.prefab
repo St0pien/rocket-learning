@@ -315,7 +315,7 @@ MonoBehaviour:
   - id: 4
     transform: {fileID: 2364055339435166443}
   firePrefab: {fileID: 2535098716718435557, guid: 94971d6cc6b377a4aa7af01a101e30cc, type: 3}
-  engineThrustMultiplier: 41
+  engineThrustMultiplier: 2500
 --- !u!114 &7102210492984535346
 MonoBehaviour:
   m_ObjectHideFlags: 0
