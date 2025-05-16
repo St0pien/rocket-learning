@@ -56,8 +56,8 @@ namespace NEAT
         public void NextGeneration()
         {
             Generation++;
-            var population = reproduction.Reproduce(genomeModule, species.Species, config.PopulationSize, Generation, Best.Id);
-            if (!population.ContainsKey(Best.Id))
+            var population = reproduction.Reproduce(genomeModule, species.Species, config.PopulationSize, Generation, Best != null ? Best.Id : 0);
+            if (Best != null && !population.ContainsKey(Best.Id))
             {
                 population.Add(Best.Id, Best);
             }

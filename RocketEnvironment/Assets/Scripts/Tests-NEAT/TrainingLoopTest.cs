@@ -88,7 +88,7 @@ public class TrainingLoopTest
     {
         var population = new Population(new PopulationConfig()
         {
-            PopulationSize = 150,
+            PopulationSize = 250,
             genomeConfig = new GenomeConfig()
             {
                 Inputs = 3,
@@ -98,28 +98,28 @@ public class TrainingLoopTest
 
                 MinWeight = -30f,
                 MaxWeight = 30f,
-                TweakWeightProb = 0.8f,
+                TweakWeightProb = 0.9f,
                 ReplaceWeightProb = 0.1f,
-                TweakMultiplier = 1f,
-                ConnDeleteProb = 0.012f,
-                ConnAddProb = 0.05f,
-                NodeAddProb = 0.02f,
-                NodeDeleteProb = 0.009f
+                TweakMultiplier = 5f,
+                ConnDeleteProb = 0.15f,
+                ConnAddProb = 0.3f,
+                NodeAddProb = 0.3f,
+                NodeDeleteProb = 0.2f
             },
             speciesConfig = new SpeciesConfig()
             {
                 CompatibilityDisjointCoefficient = 1f,
-                CompatibilityWeightCoefficient = 0.4f,
-                CompatibilityThreshold = 5f,
+                CompatibilityWeightCoefficient = 0.6f,
+                CompatibilityThreshold = 3f,
             },
             stagnationConfig = new StagnationConfig()
             {
-                MaxStagnation = 20,
-                SpeciesElitism = 2
+                MaxStagnation = 5,
+                SpeciesElitism = 1
             },
             reproductionConfig = new ReproductionConfig()
             {
-                Elitism = 2,
+                Elitism = 0,
                 SurvivalThreshold = 0.2f
             }
         });
@@ -131,7 +131,7 @@ public class TrainingLoopTest
         }
         File.WriteAllText("../data/xor_0.json", JsonConvert.SerializeObject(population.Snapshot()));
 
-        for (int i = 0; i < 500; i++)
+        for (int i = 0; i < 100; i++)
         {
             population.NextGeneration();
 
@@ -139,9 +139,9 @@ public class TrainingLoopTest
             {
                 g.Fitness = XORFitness(g);
             }
+            population.StoreBest();
             File.WriteAllText($"../data/xor_{i}.json", JsonConvert.SerializeObject(population.Snapshot()));
 
-            population.StoreBest();
             var best = population.Best;
             UnityEngine.Debug.Log($"Best fitness: {best.Fitness}");
             var bestNet = new NeuralNetwork(best.NodeGenes, best.ConnectionGenes);
