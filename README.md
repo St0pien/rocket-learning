@@ -213,7 +213,7 @@ Fitness obliczany jest w następujący sposób
 
 ### Trening
 
-/*film*/
+[Wideo z treningu](./assets/training.mp4)
 
 ![image.png](assets/image%2010.png)
 
@@ -221,4 +221,4 @@ Fitness obliczany jest w następujący sposób
 
 ### Lądowanie w wykonaniu najlepszej sieci
 
-/film/
+[Wideo z lądowania](./assets//landing.mp4)
