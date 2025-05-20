@@ -241,7 +241,6 @@ direction TB
     FuelMetric <|-- IMetric
     LandingVelocityMetric <|-- IMetric
     TrainLoop *-- LandingVelocityMetric
-    TrainLoop -- UntitledClass
 ```
 
 # Ewaluacja wyników
