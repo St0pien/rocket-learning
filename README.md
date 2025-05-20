@@ -116,16 +116,7 @@ Symulacja lądowania rakiety została zaimplementowana w silniku do tworzenia gi
 
 ### Schemat ogólny
 
-![image.png](assets/image%201.png)
-
-```mermaid
-graph LR
-  Unity[Unity Engine]-->|executes|NEAT[C# NEAT Implementationn]
-  Unity-->|executes|Rocket[Rocket Simulation]
-  Unity-->|produces|JSON[JSON Results]
-  Python[Python data tools]-->|based on|JSON
-  Python-->|produces|Plots[Plots, visualisations]
-```
+![architektura](assets/schemat.png)
 
 Jako fundament naszej symulacji zdecydowaliśmy się na silnik Unity, z racji na jego popularność, stabilność i możliwość programowania w języku C#, który obaj znamy. Wyniki działania algorytmu NEAT zapisujemy w formacie JSON, gdyż jest to format, który jest łatwy w odczycie i przesyle. Pozwala on 2 różnym badaczom na dzielenie się ze sobą wynikami swoich symulacji. Rezultaty algorytmu przedstawiamy za pomocą skryptów w Pythonie i Jupyter notebooków, które są powszechnie stosowane w branży do analizy danych. Wyborem naszym pokierowała także poprzednia znajomość tych narzędzi, i ich łatwość użycia do naszego zastosowania.
 
