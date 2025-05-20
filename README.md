@@ -123,7 +123,125 @@ Jako fundament naszej symulacji zdecydowaliśmy się na silnik Unity, z racji na
 ## Diagram klas
 
 ```mermaid
+classDiagram
+direction TB
+    class ConnectionGene {
+        +int Id
+        +float Weight
+        +ConnectionStatus Status
+    }
 
+    class Connection {
+        +int Input
+        +int Output
+    }
+
+    class GenerationSnapshot {
+        +int Generation
+        +Dictionary Species
+        +PopulationConfig Config
+    }
+    Genome *-- NodeGene
+    Genome *-- ConnectionGene
+    class Genome {
+        +int Id
+        +Dictionary NodeGenes
+        +Dictionary ConnectionGenes
+        +float Fitness
+        +Init()
+        +Mutate()
+    }
+
+    class Species {
+        +int Id
+        +int LastImproved
+        +Dictionary Members
+        +float Fitness
+        +float AdjustedFitness
+        +List FitnessHistory
+        +Speciate()
+        +GetDistance()
+    }
+
+    class NodeGene {
+        +int Id
+        +NodeGeneType Type
+        +Clone()
+    }
+
+    class NeuralNetwork {
+        +Dictionary NodeGenes
+        +Dictionary~ Dependencies
+        +List Connections
+        +List OutputNodes
+        +Activate()
+    }
+
+    class Stagnation {
+        +MarkStagnant(Dictionary speciesSet, int generation)
+    }
+
+    class Population {
+        +int Generation
+        +Init()
+        +StoreBest()
+        +NextGeneration()
+        +GetAllGenomes()
+        +Snapshot()
+    }
+
+    class Reproduction {
+        +GetInitialPopulation(GenomeModule genomeModule, int size)
+        +Reproduce(GenomeModule genomeModule, Dictionary species, int popSize, int generation, int BestId)
+    }
+
+    class Rocket {
+        +List engines
+        +ParticleSystem firePrefab
+        +float engineThrustMultiplier
+    }
+
+    class TrainLoop {
+        +GameObject rocketPrefab;
+        +GameObject groundPrefab;
+        +GameObject oobPrefab;
+        +float CompatibilityDisjointCoefficient = 1f;
+        +float CompatibilityWeightCoefficient = 0.4f;
+        +float CompatibilityThreshold = 5f;
+    }
+
+    class IMetric {
+        GetValue()
+    }
+
+    class DistanceMetric {
+    }
+
+    class FuelMetric {
+    }
+
+    class LandingVelocityMetric {
+    }
+
+    <<Interface>> IMetric
+
+    ConnectionGene *-- Connection
+    GenerationSnapshot *-- Genome
+    GenerationSnapshot *-- Species
+    Genome *-- NodeGene
+    NeuralNetwork *-- NodeGene
+    Species *-- Genome
+    Stagnation -- Species
+    Population *-- Genome
+    Population -- Reproduction
+    TrainLoop *-- Rocket
+    TrainLoop *-- NeuralNetwork
+    DistanceMetric <|-- IMetric
+    TrainLoop *-- DistanceMetric
+    FuelMetric <|-- IMetric
+    LandingVelocityMetric <|-- IMetric
+    TrainLoop *-- LandingVelocityMetric
+    TrainLoop -- UntitledClass
 ```
 
 # Ewaluacja wyników
